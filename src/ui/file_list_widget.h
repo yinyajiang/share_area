@@ -1,0 +1,65 @@
+#pragma once
+#include <QWidget>
+#include <QListWidget>
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QMap>
+#include <QProgressBar>
+#include "core/shared_file.h"
+
+/**
+ * @brief 自定义列表项组件，显示文件信息
+ */
+class FileListItemWidget : public QWidget {
+    Q_OBJECT
+
+public:
+    explicit FileListItemWidget(const SharedFileInfo& fileInfo, QWidget* parent = nullptr);
+
+    void updateProgress(qint64 received, qint64 total);
+    QString fileId() const { return m_fileInfo.fileId; }
+    QString deviceId() const { return m_fileInfo.deviceId; }
+
+private:
+    SharedFileInfo m_fileInfo;
+    QLabel* m_nameLabel = nullptr;
+    QLabel* m_infoLabel = nullptr;
+    QProgressBar* m_progressBar = nullptr;
+    QLabel* m_statusLabel = nullptr;
+
+    void setupUI();
+    QString formatSize(qint64 bytes);
+};
+
+/**
+ * @brief 远程文件列表组件
+ * 显示其他设备分享的文件
+ */
+class FileListWidget : public QWidget {
+    Q_OBJECT
+
+public:
+    explicit FileListWidget(QWidget* parent = nullptr);
+    void retranslateUi();
+
+    void addFile(const SharedFileInfo& file);
+    void removeFile(const QString& fileId, const QString& deviceId);
+    void clearRemoteFiles(const QString& deviceId);
+    void updateTransferProgress(const QString& fileId, qint64 received, qint64 total);
+
+signals:
+    void fileDownloadRequested(const SharedFileInfo& file, const QString& savePath);
+
+private slots:
+    void onItemDoubleClicked(QListWidgetItem* item);
+
+private:
+    QListWidget* m_listWidget = nullptr;
+    QLabel* m_emptyLabel = nullptr;
+    QLabel* m_emptyIconLabel = nullptr;
+    QMap<QString, QListWidgetItem*> m_items;  // fileId -> item
+    QMap<QString, SharedFileInfo> m_fileInfos;
+
+    void setupUI();
+    void updateEmptyState();
+};

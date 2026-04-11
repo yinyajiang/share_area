@@ -1,0 +1,112 @@
+cmake_minimum_required(VERSION 3.20)
+project(ShareArea VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+# Qt path
+if(NOT DEFINED CMAKE_PREFIX_PATH)
+    if(APPLE)
+        set(CMAKE_PREFIX_PATH "/Users/yajiang/Qt6.10/6.10.3/macos")
+    elseif(WIN32)
+        # User should set CMAKE_PREFIX_PATH manually on Windows
+    endif()
+endif()
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Svg LinguistTools)
+
+set(SOURCES
+    src/main.cpp
+    src/core/app_settings.cpp
+    src/core/shared_file.cpp
+    src/network/peer_discovery.cpp
+    src/network/file_transfer_manager.cpp
+    src/ui/main_window.cpp
+    src/ui/drop_area_widget.cpp
+    src/ui/file_list_widget.cpp
+    src/ui/setup_dialog.cpp
+    src/ui/system_tray.cpp
+    src/ui/app_icon.cpp
+)
+
+# macOS 原生毛玻璃支持
+if(APPLE)
+    list(APPEND SOURCES src/ui/macos_blur.mm)
+endif()
+
+set(HEADERS
+    src/constants.h
+    src/core/app_settings.h
+    src/core/shared_file.h
+    src/network/peer_discovery.h
+    src/network/file_transfer_manager.h
+    src/ui/main_window.h
+    src/ui/drop_area_widget.h
+    src/ui/file_list_widget.h
+    src/ui/setup_dialog.h
+    src/ui/system_tray.h
+    src/ui/app_icon.h
+)
+
+# Translation files
+set(TS_FILES
+    translations/share_area_zh_CN.ts
+    translations/share_area_en.ts
+)
+
+qt_add_executable(ShareArea
+    ${SOURCES}
+    ${HEADERS}
+    resources/resources.qrc
+)
+
+# Handle translations
+qt_create_translation(QM_FILES ${SOURCES} ${HEADERS} ${TS_FILES})
+target_sources(ShareArea PRIVATE ${QM_FILES})
+
+# Copy QM files next to the executable for runtime loading
+add_custom_command(TARGET ShareArea POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        $<TARGET_FILE_DIR:ShareArea>/translations
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${QM_FILES}
+        $<TARGET_FILE_DIR:ShareArea>/translations/
+)
+
+target_include_directories(ShareArea PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/network
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+)
+
+target_link_libraries(ShareArea PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Network
+    Qt6::Svg
+)
+
+# macOS bundle
+if(APPLE)
+    find_library(APPKIT_LIBRARY AppKit)
+    target_link_libraries(ShareArea PRIVATE ${APPKIT_LIBRARY})
+    set_target_properties(ShareArea PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_GUI_IDENTIFIER com.sharearea.app
+        MACOSX_BUNDLE_BUNDLE_NAME ShareArea
+        MACOSX_BUNDLE_BUNDLE_VERSION 1.0.0
+        MACOSX_BUNDLE_SHORT_VERSION_STRING 1.0.0
+    )
+endif()
+
+# Windows
+if(WIN32)
+    set_target_properties(ShareArea PROPERTIES
+        WIN32_EXECUTABLE TRUE
+    )
+endif()

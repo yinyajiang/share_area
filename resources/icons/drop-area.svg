@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="warm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+  <!-- 云朵底座 -->
+  <path d="M16 40C10 40 6 36 6 31s4-9 9-9c.5-6 5.5-11 12-11 5 0 9.5 3 11.5 7.5A10 10 0 0 1 50 28a8 8 0 0 1 2 15H16z"
+        fill="#d97706" opacity=".1"/>
+  <!-- 主文件 -->
+  <path d="M20 14h12l6 6v28a2 2 0 0 1-2 2H22a2 2 0 0 1-2-2V14z" fill="#78716c" opacity=".75"/>
+  <path d="M32 14v6h6z" fill="#57534e" opacity=".45"/>
+  <!-- 文件文字线 -->
+  <line x1="24" y1="26" x2="34" y2="26" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".65"/>
+  <line x1="24" y1="31" x2="31" y2="31" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".45"/>
+  <line x1="24" y1="36" x2="33" y2="36" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".35"/>
+  <!-- 向下箭头 -->
+  <line x1="38" y1="34" x2="38" y2="50" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
+  <path d="M38 54l-5-6h10z" fill="#d97706"/>
+</svg>

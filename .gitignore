@@ -1,0 +1,21 @@
+# Build
+build/
+
+# IDE
+.vscode/
+.idea/
+*.user
+*.pro.user
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Generated
+*.qm
+ShareArea_autogen/
+
+# Claude Code local settings
+.claude/settings.local.json

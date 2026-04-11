@@ -1,0 +1,108 @@
+#pragma once
+#include <QMainWindow>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QMap>
+#include <QPair>
+#include <QHostAddress>
+#include <QTranslator>
+#include <QPropertyAnimation>
+
+// 前向声明
+class DropAreaWidget;
+class FileListWidget;
+class SystemTray;
+class PeerDiscovery;
+class FileTransferManager;
+
+#include "core/shared_file.h"
+#include "core/app_settings.h"
+
+// 呼吸灯指示点
+class BreathingDot : public QWidget {
+    Q_OBJECT
+    Q_PROPERTY(qreal dotOpacity READ getDotOpacity WRITE setDotOpacity)
+public:
+    explicit BreathingDot(QWidget* parent = nullptr);
+    void setActive(bool active);
+protected:
+    void paintEvent(QPaintEvent* event) override;
+private:
+    qreal getDotOpacity() const;
+    void setDotOpacity(qreal opacity);
+    qreal m_opacity = 1.0;
+    bool m_active = false;
+    QPropertyAnimation* m_animation = nullptr;
+};
+
+class MainWindow : public QMainWindow {
+    Q_OBJECT
+
+public:
+    explicit MainWindow(QWidget* parent = nullptr);
+    ~MainWindow();
+
+    void initialize();
+    void setTranslator(QTranslator* translator);
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
+    void changeEvent(QEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void paintEvent(QPaintEvent* event) override;
+
+private slots:
+    void onFilesDropped(const QList<QUrl>& urls);
+    void onPeerFound(const QString& deviceId, const QString& deviceName, const QHostAddress& addr, int port);
+    void onPeerLost(const QString& deviceId);
+    void onFileShared(const SharedFileInfo& file);
+    void onFileRemoved(const QString& fileId, const QString& deviceId);
+    void onDownloadProgress(const QString& fileId, qint64 received, qint64 total);
+    void onDownloadComplete(const QString& fileId, const QString& path);
+    void onDownloadError(const QString& fileId, const QString& error);
+    void onChangeLanguage(const QString& lang);
+    void onChangeCode();
+
+private:
+    // UI 组件
+    QWidget* m_centralWidget = nullptr;
+    QVBoxLayout* m_mainLayout = nullptr;
+    QWidget* m_titleBar = nullptr;
+    QPushButton* m_closeButton = nullptr;
+    QLabel* m_titleLabel = nullptr;
+    QLabel* m_onlineLabel = nullptr;
+    BreathingDot* m_breathingDot = nullptr;
+    QLabel* m_separatorLabel = nullptr;
+    DropAreaWidget* m_dropArea = nullptr;
+    FileListWidget* m_fileList = nullptr;
+    SystemTray* m_trayIcon = nullptr;
+
+    // 网络组件
+    PeerDiscovery* m_discovery = nullptr;
+    FileTransferManager* m_transferManager = nullptr;
+
+    // 翻译
+    QTranslator* m_translator = nullptr;
+
+    // 数据
+    QMap<QString, SharedFileInfo> m_localSharedFiles;
+    QMap<QString, QPair<QHostAddress, int>> m_peerTransferPorts;
+    QString m_currentLanguage;
+
+    // 窗口拖拽
+    bool m_dragging = false;
+    QPoint m_dragStartPos;
+
+    void setupUI();
+    void setupTitleBar();
+    void setupConnections();
+    void applyStylesheet();
+    void retranslateUi();
+    void checkFirstRun();
+    void updateOnlineCount();
+};
