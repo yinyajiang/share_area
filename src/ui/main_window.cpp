@@ -150,7 +150,7 @@ void MainWindow::setupTitleBar() {
     layout->addWidget(m_breathingDot);
 
     // 在线数
-    m_onlineLabel = new QLabel(tr("0 在线"), this);
+    m_onlineLabel = new QLabel(tr("%n 在线", nullptr, 0), this);
     m_onlineLabel->setStyleSheet(QStringLiteral(
         "QLabel { color: rgba(41,37,36,0.50); font-size: 11px; }"));
     layout->addWidget(m_onlineLabel);
@@ -250,6 +250,10 @@ void MainWindow::initialize() {
 
     // 设置语言菜单初始选中
     m_trayIcon->updateLanguageChecked(m_currentLanguage);
+
+    // 默认窗口置顶
+    setWindowFlag(Qt::WindowStaysOnTopHint, true);
+    show();
 }
 
 void MainWindow::setupConnections() {
@@ -291,6 +295,10 @@ void MainWindow::setupConnections() {
             this, &MainWindow::onChangeLanguage);
     connect(m_trayIcon, &SystemTray::changeCodeRequested,
             this, &MainWindow::onChangeCode);
+    connect(m_trayIcon, &SystemTray::alwaysOnTopChanged, this, [this](bool on) {
+        setWindowFlag(Qt::WindowStaysOnTopHint, on);
+        show();
+    });
     connect(m_trayIcon, &SystemTray::opacityChanged, this, [this](int value) {
         setWindowOpacity(value / 100.0);
         AppSettings::instance().setOpacity(value);
@@ -494,6 +502,7 @@ void MainWindow::onChangeCode() {
     if (dialog.exec() == QDialog::Accepted) {
         QString newCode = dialog.groupCode();
         if (m_discovery) { m_discovery->stop(); delete m_discovery; m_discovery = nullptr; }
+        if (m_transferManager) { m_transferManager->stopServer(); delete m_transferManager; m_transferManager = nullptr; }
         AppSettings::instance().setGroupCode(newCode);
         AppSettings::instance().save();
         m_peerTransferPorts.clear();

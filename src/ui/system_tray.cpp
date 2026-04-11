@@ -48,6 +48,14 @@ void SystemTray::setupMenu() {
     m_changeCodeAction = m_contextMenu->addAction(tr("更换识别码"));
     connect(m_changeCodeAction, &QAction::triggered, this, &SystemTray::changeCodeRequested);
 
+    // 窗口置顶
+    m_alwaysOnTopAction = m_contextMenu->addAction(tr("窗口置顶"));
+    m_alwaysOnTopAction->setCheckable(true);
+    m_alwaysOnTopAction->setChecked(true);
+    connect(m_alwaysOnTopAction, &QAction::triggered, this, [this]() {
+        emit alwaysOnTopChanged(m_alwaysOnTopAction->isChecked());
+    });
+
     // 透明度子菜单
     m_opacityMenu = m_contextMenu->addMenu(tr("透明度"));
 
@@ -121,10 +129,15 @@ void SystemTray::updateLanguageChecked(const QString& lang) {
     }
 }
 
+void SystemTray::setAlwaysOnTopChecked(bool on) {
+    m_alwaysOnTopAction->setChecked(on);
+}
+
 void SystemTray::retranslateUi() {
     m_showAction->setText(tr("显示主窗口"));
     m_languageMenu->setTitle(tr("语言设置"));
     m_changeCodeAction->setText(tr("更换识别码"));
+    m_alwaysOnTopAction->setText(tr("窗口置顶"));
     m_opacityMenu->setTitle(tr("透明度"));
     m_quitAction->setText(tr("退出"));
 }

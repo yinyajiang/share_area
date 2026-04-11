@@ -151,6 +151,8 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
         if (parts.size() < 7) return;
 
         QString deviceId = parts[2];
+        if (deviceId == m_deviceId) return;
+
         QString deviceName = parts[3];
         QString fileId = parts[4];
         QString fileName = parts[5];
@@ -171,6 +173,8 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
         if (parts.size() < 4) return;
 
         QString deviceId = parts[2];
+        if (deviceId == m_deviceId) return;
+
         QString fileId = parts[3];
 
         emit fileRemoved(fileId, deviceId);

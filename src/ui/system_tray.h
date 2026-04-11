@@ -24,12 +24,14 @@ public:
     void showMessage(const QString& title, const QString& message);
     void setToolTip(const QString& tooltip);
     void updateLanguageChecked(const QString& lang);
+    void setAlwaysOnTopChecked(bool on);
     void retranslateUi();
 
 signals:
     void showWindowRequested();
     void changeLanguageRequested(const QString& lang);
     void changeCodeRequested();
+    void alwaysOnTopChanged(bool on);
     void opacityChanged(int opacity);
     void quitRequested();
 
@@ -42,6 +44,7 @@ private:
     QAction* m_chineseAction = nullptr;
     QAction* m_englishAction = nullptr;
     QAction* m_changeCodeAction = nullptr;
+    QAction* m_alwaysOnTopAction = nullptr;
     QMenu* m_opacityMenu = nullptr;
     QSlider* m_opacitySlider = nullptr;
     QAction* m_quitAction = nullptr;

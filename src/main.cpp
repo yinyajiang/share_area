@@ -14,6 +14,9 @@ int main(int argc, char* argv[]) {
     app.setApplicationVersion(Constants::APP_VERSION);
     app.setOrganizationName(QStringLiteral("ShareArea"));
 
+    // macOS: 不在 Dock 栏显示图标
+    app.setQuitOnLastWindowClosed(false);
+
     // 设置应用图标（Dock/任务栏）
     app.setWindowIcon(createAppIcon());
 
