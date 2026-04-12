@@ -8,9 +8,8 @@
 #include <QMap>
 #include <QPair>
 #include <QHostAddress>
-#include <QTranslator>
-#include <QPropertyAnimation>
 #include <QSvgRenderer>
+#include <QTranslator>
 
 // 前向声明
 class DropAreaWidget;
@@ -22,22 +21,7 @@ class FileTransferManager;
 #include "core/shared_file.h"
 #include "core/app_settings.h"
 
-// 呼吸灯指示点
-class BreathingDot : public QWidget {
-    Q_OBJECT
-    Q_PROPERTY(qreal dotOpacity READ getDotOpacity WRITE setDotOpacity)
-public:
-    explicit BreathingDot(QWidget* parent = nullptr);
-    void setActive(bool active);
-protected:
-    void paintEvent(QPaintEvent* event) override;
-private:
-    qreal getDotOpacity() const;
-    void setDotOpacity(qreal opacity);
-    qreal m_opacity = 1.0;
-    bool m_active = false;
-    QPropertyAnimation* m_animation = nullptr;
-};
+#include "ui/breathing_dot.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT

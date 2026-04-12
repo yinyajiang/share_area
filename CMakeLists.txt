@@ -25,6 +25,7 @@ set(SOURCES
     src/network/peer_discovery.cpp
     src/network/file_transfer_manager.cpp
     src/ui/main_window.cpp
+    src/ui/breathing_dot.cpp
     src/ui/drop_area_widget.cpp
     src/ui/file_list_widget.cpp
     src/ui/setup_dialog.cpp
@@ -44,6 +45,7 @@ set(HEADERS
     src/network/peer_discovery.h
     src/network/file_transfer_manager.h
     src/ui/main_window.h
+    src/ui/breathing_dot.h
     src/ui/drop_area_widget.h
     src/ui/file_list_widget.h
     src/ui/setup_dialog.h
