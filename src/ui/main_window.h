@@ -10,6 +10,7 @@
 #include <QHostAddress>
 #include <QTranslator>
 #include <QPropertyAnimation>
+#include <QSvgRenderer>
 
 // 前向声明
 class DropAreaWidget;
@@ -97,6 +98,12 @@ private:
     // 窗口拖拽
     bool m_dragging = false;
     QPoint m_dragStartPos;
+
+    // 标记强制退出（跳过 closeEvent 的隐藏逻辑）
+    bool m_forceQuit = false;
+
+    // SVG 背景渲染器
+    QSvgRenderer* m_bgRenderer = nullptr;
 
     void setupUI();
     void setupTitleBar();

@@ -107,8 +107,8 @@ void SetupDialog::setupUI() {
 
     // 输入框
     m_codeEdit = new QLineEdit(this);
-    m_codeEdit->setPlaceholderText(tr("输入 6-20 位识别码"));
-    m_codeEdit->setMaxLength(20);
+    m_codeEdit->setPlaceholderText(tr("输入 1-6 位识别码"));
+    m_codeEdit->setMaxLength(6);
     m_codeEdit->setAlignment(Qt::AlignCenter);
     m_codeEdit->setStyleSheet(QStringLiteral(
         "QLineEdit {"
@@ -160,12 +160,12 @@ QString SetupDialog::groupCode() const {
 void SetupDialog::retranslateUi() {
     m_closeButton->setToolTip(tr("关闭"));
     m_hintLabel->setText(tr("请输入识别码以加入分享组"));
-    m_codeEdit->setPlaceholderText(tr("输入 6-20 位识别码"));
+    m_codeEdit->setPlaceholderText(tr("输入 1-6 位识别码"));
     m_okButton->setText(tr("确认"));
 }
 
 void SetupDialog::validateInput() {
     QString text = m_codeEdit->text().trimmed();
-    bool valid = !text.isEmpty() && text.length() >= 6;
+    bool valid = !text.isEmpty();
     m_okButton->setEnabled(valid);
 }

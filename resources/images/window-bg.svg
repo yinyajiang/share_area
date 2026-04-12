@@ -1,0 +1,288 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 480" width="380" height="480">
+  <defs>
+    <!-- ====== 渐变定义 ====== -->
+
+    <!-- 主背景渐变：暖石色 -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0.55" y2="1">
+      <stop offset="0%"   stop-color="#fafaf9"/>
+      <stop offset="45%"  stop-color="#f5f5f4"/>
+      <stop offset="100%" stop-color="#f0ede8"/>
+    </linearGradient>
+
+    <!-- 左上角暖琥珀光晕 -->
+    <radialGradient id="glowAmber" cx="0.05" cy="0" r="0.55" fx="0.05" fy="0">
+      <stop offset="0%"   stop-color="#fbbf24" stop-opacity="0.14"/>
+      <stop offset="40%"  stop-color="#f59e0b" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 右下角冷青光晕 -->
+    <radialGradient id="glowSlate" cx="0.95" cy="1.05" r="0.58" fx="0.95" fy="1.05">
+      <stop offset="0%"   stop-color="#94a3b8" stop-opacity="0.10"/>
+      <stop offset="50%"  stop-color="#94a3b8" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#94a3b8" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 右上角暖粉光晕 -->
+    <radialGradient id="glowRose" cx="0.85" cy="0.05" r="0.40" fx="0.85" fy="0.05">
+      <stop offset="0%"   stop-color="#fed7aa" stop-opacity="0.12"/>
+      <stop offset="60%"  stop-color="#fdba74" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#fed7aa" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 中心琥珀柔光 -->
+    <radialGradient id="glowCenter" cx="0.5" cy="0.28" r="0.50" fx="0.5" fy="0.28">
+      <stop offset="0%"   stop-color="#fef3c7" stop-opacity="0.20"/>
+      <stop offset="50%"  stop-color="#fde68a" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 左下角淡紫暖光 -->
+    <radialGradient id="glowLavender" cx="0.02" cy="0.92" r="0.35" fx="0.02" fy="0.92">
+      <stop offset="0%"   stop-color="#e9d5ff" stop-opacity="0.06"/>
+      <stop offset="60%"  stop-color="#c4b5fd" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#e9d5ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 底部渐隐暖色带 -->
+    <linearGradient id="bottomBand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#f5f0e8" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#ebe5d9" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <!-- ====== Bokeh 光斑渐变 ====== -->
+
+    <!-- 琥珀色 bokeh -->
+    <radialGradient id="bokehAmber" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#fbbf24" stop-opacity="0.08"/>
+      <stop offset="50%"  stop-color="#f59e0b" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 暖白 bokeh -->
+    <radialGradient id="bokehWarm" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#fef3c7" stop-opacity="0.12"/>
+      <stop offset="60%"  stop-color="#fef9ee" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 青灰 bokeh -->
+    <radialGradient id="bokehSlate" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#cbd5e1" stop-opacity="0.07"/>
+      <stop offset="60%"  stop-color="#94a3b8" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#cbd5e1" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 暖橙 bokeh -->
+    <radialGradient id="bokehOrange" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#fed7aa" stop-opacity="0.10"/>
+      <stop offset="60%"  stop-color="#fdba74" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#fed7aa" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 淡绿 bokeh -->
+    <radialGradient id="bokehGreen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#bbf7d0" stop-opacity="0.05"/>
+      <stop offset="60%"  stop-color="#86efac" stop-opacity="0.01"/>
+      <stop offset="100%" stop-color="#bbf7d0" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ====== 流光线条渐变 ====== -->
+
+    <!-- 琥珀流光 -->
+    <linearGradient id="flowLineAmber" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#fbbf24" stop-opacity="0"/>
+      <stop offset="30%"  stop-color="#fbbf24" stop-opacity="0.06"/>
+      <stop offset="70%"  stop-color="#d97706" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#d97706" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- 青灰流光 -->
+    <linearGradient id="flowLineSlate" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#94a3b8" stop-opacity="0"/>
+      <stop offset="40%"  stop-color="#94a3b8" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#94a3b8" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- 暖粉流光 -->
+    <linearGradient id="flowLineRose" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#fed7aa" stop-opacity="0"/>
+      <stop offset="40%"  stop-color="#fdba74" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#fed7aa" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- ====== 滤镜 ====== -->
+
+    <!-- 柔和高斯模糊 -->
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+
+    <!-- 更强的模糊 -->
+    <filter id="bigBlur">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+
+    <!-- 柔和噪点纹理 -->
+    <filter id="noise" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix type="saturate" values="0" in="noise" result="grayNoise"/>
+      <feBlend in="SourceGraphic" in2="grayNoise" mode="multiply" result="blend"/>
+      <feComponentTransfer in="blend">
+        <feFuncA type="linear" slope="1"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+
+  <!-- 圆角裁切 -->
+  <clipPath id="roundedClip">
+    <rect x="0" y="0" width="380" height="480" rx="12" ry="12"/>
+  </clipPath>
+
+  <g clip-path="url(#roundedClip)">
+
+    <!-- ============ 第一层：基底渐变 ============ -->
+    <rect width="380" height="480" fill="url(#bgGrad)"/>
+
+    <!-- ============ 第二层：大范围光晕叠加 ============ -->
+    <rect width="380" height="480" fill="url(#glowCenter)"/>
+    <rect width="380" height="480" fill="url(#glowAmber)"/>
+    <rect width="380" height="480" fill="url(#glowRose)"/>
+    <rect width="380" height="480" fill="url(#glowLavender)"/>
+    <rect width="380" height="480" fill="url(#glowSlate)"/>
+    <rect width="380" height="480" fill="url(#bottomBand)"/>
+
+    <!-- ============ 第三层：有机色块（柔化 blob） ============ -->
+
+    <!-- 琥珀色 blob 1 -->
+    <ellipse cx="70" cy="80" rx="90" ry="60" fill="#fbbf24" opacity="0.04" filter="url(#bigBlur)"/>
+    <!-- 琥珀色 blob 2 -->
+    <ellipse cx="310" cy="200" rx="70" ry="50" fill="#f59e0b" opacity="0.03" filter="url(#bigBlur)"/>
+    <!-- 青色 blob -->
+    <ellipse cx="300" cy="420" rx="80" ry="55" fill="#94a3b8" opacity="0.04" filter="url(#bigBlur)"/>
+    <!-- 暖粉 blob -->
+    <ellipse cx="190" cy="50" rx="60" ry="40" fill="#fed7aa" opacity="0.05" filter="url(#bigBlur)"/>
+    <!-- 淡紫 blob -->
+    <ellipse cx="40" cy="400" rx="65" ry="45" fill="#e9d5ff" opacity="0.03" filter="url(#bigBlur)"/>
+    <!-- 淡绿 blob -->
+    <ellipse cx="250" cy="320" rx="55" ry="40" fill="#bbf7d0" opacity="0.025" filter="url(#bigBlur)"/>
+
+    <!-- ============ 第四层：流光曲线 ============ -->
+
+    <!-- 横向流光 1 -->
+    <path d="M-10,130 Q100,110 200,135 T390,120" fill="none" stroke="url(#flowLineAmber)" stroke-width="1.2"/>
+    <!-- 横向流光 2 -->
+    <path d="M-10,260 Q80,240 180,265 T390,250" fill="none" stroke="url(#flowLineSlate)" stroke-width="1"/>
+    <!-- 横向流光 3 -->
+    <path d="M-10,370 Q120,350 220,375 T390,360" fill="none" stroke="url(#flowLineRose)" stroke-width="0.8"/>
+    <!-- 斜向流光 1 -->
+    <path d="M20,480 Q50,350 100,260 T200,100" fill="none" stroke="#fbbf24" stroke-opacity="0.03" stroke-width="1"/>
+    <!-- 斜向流光 2 -->
+    <path d="M360,0 Q330,120 280,220 T170,400" fill="none" stroke="#94a3b8" stroke-opacity="0.03" stroke-width="0.8"/>
+
+    <!-- ============ 第五层：装饰圆环 ============ -->
+
+    <!-- 大圆环：左上 -->
+    <circle cx="30" cy="-10" r="140" fill="none" stroke="#d97706" stroke-opacity="0.025" stroke-width="1"/>
+    <circle cx="30" cy="-10" r="130" fill="none" stroke="#fbbf24" stroke-opacity="0.015" stroke-width="0.6"/>
+
+    <!-- 大圆环：右下 -->
+    <circle cx="360" cy="500" r="120" fill="none" stroke="#94a3b8" stroke-opacity="0.03" stroke-width="1"/>
+    <circle cx="360" cy="500" r="108" fill="none" stroke="#cbd5e1" stroke-opacity="0.018" stroke-width="0.6"/>
+
+    <!-- 中圆环：中心偏上 -->
+    <circle cx="200" cy="160" r="180" fill="none" stroke="#fbbf24" stroke-opacity="0.012" stroke-width="0.8"/>
+
+    <!-- 小圆环散布 -->
+    <circle cx="300" cy="80"  r="40" fill="none" stroke="#fed7aa" stroke-opacity="0.04" stroke-width="0.7"/>
+    <circle cx="80"  cy="300" r="50" fill="none" stroke="#d97706" stroke-opacity="0.02" stroke-width="0.6"/>
+    <circle cx="320" cy="350" r="35" fill="none" stroke="#94a3b8" stroke-opacity="0.03" stroke-width="0.7"/>
+    <circle cx="150" cy="430" r="45" fill="none" stroke="#fbbf24" stroke-opacity="0.018" stroke-width="0.6"/>
+    <circle cx="60"  cy="180" r="30" fill="none" stroke="#cbd5e1" stroke-opacity="0.025" stroke-width="0.5"/>
+
+    <!-- 弧线段装饰 -->
+    <path d="M0,200 A120,120 0 0,1 60,100" fill="none" stroke="#fbbf24" stroke-opacity="0.03" stroke-width="0.8" stroke-linecap="round"/>
+    <path d="M380,300 A100,100 0 0,0 300,380" fill="none" stroke="#94a3b8" stroke-opacity="0.03" stroke-width="0.8" stroke-linecap="round"/>
+    <path d="M150,480 A80,80 0 0,1 250,430" fill="none" stroke="#fed7aa" stroke-opacity="0.04" stroke-width="0.7" stroke-linecap="round"/>
+
+    <!-- ============ 第六层：Bokeh 光斑 ============ -->
+
+    <!-- 大光斑 -->
+    <circle cx="50"  cy="60"  r="28" fill="url(#bokehAmber)"/>
+    <circle cx="340" cy="160" r="22" fill="url(#bokehSlate)"/>
+    <circle cx="180" cy="240" r="30" fill="url(#bokehWarm)"/>
+    <circle cx="90"  cy="380" r="25" fill="url(#bokehOrange)"/>
+    <circle cx="280" cy="430" r="20" fill="url(#bokehSlate)"/>
+
+    <!-- 中光斑 -->
+    <circle cx="310" cy="50"  r="16" fill="url(#bokehOrange)"/>
+    <circle cx="130" cy="140" r="14" fill="url(#bokehWarm)"/>
+    <circle cx="250" cy="190" r="12" fill="url(#bokehAmber)"/>
+    <circle cx="40"  cy="260" r="18" fill="url(#bokehGreen)"/>
+    <circle cx="350" cy="310" r="14" fill="url(#bokehSlate)"/>
+    <circle cx="160" cy="340" r="16" fill="url(#bokehAmber)"/>
+    <circle cx="220" cy="100" r="10" fill="url(#bokehWarm)"/>
+
+    <!-- 小光斑 -->
+    <circle cx="100" cy="30"  r="6" fill="url(#bokehAmber)"/>
+    <circle cx="260" cy="70"  r="5" fill="url(#bokehSlate)"/>
+    <circle cx="200" cy="300" r="7" fill="url(#bokehWarm)"/>
+    <circle cx="330" cy="250" r="5" fill="url(#bokehOrange)"/>
+    <circle cx="70"  cy="210" r="6" fill="url(#bokehAmber)"/>
+    <circle cx="150" cy="460" r="8" fill="url(#bokehOrange)"/>
+    <circle cx="300" cy="390" r="5" fill="url(#bokehGreen)"/>
+
+    <!-- 微型光点（散景星芒效果） -->
+    <circle cx="120" cy="85"  r="2.5" fill="#fbbf24" opacity="0.07" filter="url(#softBlur)"/>
+    <circle cx="280" cy="130" r="2"   fill="#94a3b8" opacity="0.09" filter="url(#softBlur)"/>
+    <circle cx="50"  cy="310" r="3"   fill="#d97706" opacity="0.05" filter="url(#softBlur)"/>
+    <circle cx="340" cy="370" r="2"   fill="#94a3b8" opacity="0.08" filter="url(#softBlur)"/>
+    <circle cx="190" cy="190" r="2.5" fill="#fbbf24" opacity="0.06" filter="url(#softBlur)"/>
+    <circle cx="90"  cy="440" r="2"   fill="#f59e0b" opacity="0.06" filter="url(#softBlur)"/>
+    <circle cx="230" cy="350" r="3"   fill="#fed7aa" opacity="0.07" filter="url(#softBlur)"/>
+    <circle cx="360" cy="90"  r="2"   fill="#cbd5e1" opacity="0.08" filter="url(#softBlur)"/>
+
+    <!-- ============ 第七层：柔化装饰点缀 ============ -->
+
+    <!-- 菱形装饰 -->
+    <rect x="290" y="100" width="8" height="8" rx="1" transform="rotate(45 294 104)" fill="#fbbf24" opacity="0.04"/>
+    <rect x="55"  y="350" width="6" height="6" rx="1" transform="rotate(45 58 353)" fill="#94a3b8" opacity="0.05"/>
+    <rect x="200" y="400" width="7" height="7" rx="1" transform="rotate(45 203.5 403.5)" fill="#d97706" opacity="0.035"/>
+
+    <!-- 十字星点缀 -->
+    <g opacity="0.06">
+      <line x1="145" y1="20" x2="155" y2="20" stroke="#fbbf24" stroke-width="0.8" stroke-linecap="round"/>
+      <line x1="150" y1="15" x2="150" y2="25" stroke="#fbbf24" stroke-width="0.8" stroke-linecap="round"/>
+    </g>
+    <g opacity="0.05">
+      <line x1="315" y1="210" x2="323" y2="210" stroke="#94a3b8" stroke-width="0.7" stroke-linecap="round"/>
+      <line x1="319" y1="206" x2="319" y2="214" stroke="#94a3b8" stroke-width="0.7" stroke-linecap="round"/>
+    </g>
+    <g opacity="0.04">
+      <line x1="85" y1="445" x2="93" y2="445" stroke="#fbbf24" stroke-width="0.7" stroke-linecap="round"/>
+      <line x1="89" y1="441" x2="89" y2="449" stroke="#fbbf24" stroke-width="0.7" stroke-linecap="round"/>
+    </g>
+    <g opacity="0.045">
+      <line x1="235" y1="260" x2="243" y2="260" stroke="#cbd5e1" stroke-width="0.6" stroke-linecap="round"/>
+      <line x1="239" y1="256" x2="239" y2="264" stroke="#cbd5e1" stroke-width="0.6" stroke-linecap="round"/>
+    </g>
+
+    <!-- 散布小圆点 -->
+    <circle cx="25"  cy="140" r="1.2" fill="#d97706"  opacity="0.08"/>
+    <circle cx="355" cy="135" r="1"   fill="#94a3b8"  opacity="0.09"/>
+    <circle cx="110" cy="250" r="1.3" fill="#fbbf24"  opacity="0.06"/>
+    <circle cx="270" cy="300" r="0.9" fill="#94a3b8"  opacity="0.07"/>
+    <circle cx="175" cy="450" r="1.1" fill="#d97706"  opacity="0.06"/>
+    <circle cx="50"  cy="50"  r="1"   fill="#f59e0b"  opacity="0.10"/>
+    <circle cx="320" cy="480" r="1.2" fill="#cbd5e1"  opacity="0.06"/>
+    <circle cx="200" cy="70"  r="0.8" fill="#fed7aa"  opacity="0.08"/>
+    <circle cx="140" cy="170" r="1"   fill="#fbbf24"  opacity="0.05"/>
+    <circle cx="360" cy="440" r="0.9" fill="#94a3b8"  opacity="0.07"/>
+    <circle cx="15"  cy="460" r="1.1" fill="#d97706"  opacity="0.05"/>
+    <circle cx="240" cy="150" r="0.7" fill="#cbd5e1"  opacity="0.09"/>
+
+    <!-- ============ 第八层：噪点纹理 ============ -->
+    <rect width="380" height="480" fill="url(#bgGrad)" opacity="0.012" filter="url(#noise)"/>
+
+  </g>
+</svg>

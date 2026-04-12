@@ -44,13 +44,9 @@
 </context>
 <context>
     <name>MainWindow</name>
-    <message>
-        <source>最小化</source>
-        <translation type="vanished">Minimize</translation>
-    </message>
     <message numerus="yes">
-        <location filename="../src/ui/main_window.cpp" line="153"/>
-        <location filename="../src/ui/main_window.cpp" line="525"/>
+        <location filename="../src/ui/main_window.cpp" line="169"/>
+        <location filename="../src/ui/main_window.cpp" line="578"/>
         <source>%n 在线</source>
         <translation>
             <numerusform>%n online</numerusform>
@@ -58,70 +54,46 @@
         </translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="163"/>
-        <location filename="../src/ui/main_window.cpp" line="517"/>
+        <location filename="../src/ui/main_window.cpp" line="179"/>
+        <location filename="../src/ui/main_window.cpp" line="570"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="202"/>
-        <location filename="../src/ui/main_window.cpp" line="516"/>
+        <location filename="../src/ui/main_window.cpp" line="218"/>
+        <location filename="../src/ui/main_window.cpp" line="569"/>
         <source>其他设备分享的文件</source>
         <translation>Files shared by other devices</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="441"/>
+        <location filename="../src/ui/main_window.cpp" line="481"/>
         <source>设备上线</source>
         <translation>Device Online</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="441"/>
+        <location filename="../src/ui/main_window.cpp" line="482"/>
         <source>%1 已加入分享组</source>
         <translation>%1 has joined the sharing group</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="470"/>
+        <location filename="../src/ui/main_window.cpp" line="513"/>
         <source>下载完成</source>
         <translation>Download Complete</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="470"/>
+        <location filename="../src/ui/main_window.cpp" line="513"/>
         <source>文件已成功下载</source>
         <translation>File downloaded successfully</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="475"/>
+        <location filename="../src/ui/main_window.cpp" line="518"/>
         <source>下载失败</source>
         <translation>Download Failed</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="475"/>
+        <location filename="../src/ui/main_window.cpp" line="518"/>
         <source>无法下载文件：%1</source>
         <translation>Failed to download file: %1</translation>
-    </message>
-    <message>
-        <source>语言设置</source>
-        <translation type="vanished">Language Settings</translation>
-    </message>
-    <message>
-        <source>语言更改将在重启应用后生效</source>
-        <translation type="vanished">Language change will take effect after restarting the application</translation>
-    </message>
-    <message>
-        <source>更换识别码</source>
-        <translation type="vanished">Change Group Code</translation>
-    </message>
-    <message>
-        <source>更换识别码将断开当前连接，是否继续？</source>
-        <translation type="vanished">Changing the group code will disconnect current connections. Continue?</translation>
-    </message>
-    <message>
-        <source>成功</source>
-        <translation type="vanished">Success</translation>
-    </message>
-    <message>
-        <source>识别码已更新，新的识别码：%1</source>
-        <translation type="vanished">Group code updated. New code: %1</translation>
     </message>
 </context>
 <context>
@@ -141,8 +113,8 @@
     <message>
         <location filename="../src/ui/setup_dialog.cpp" line="110"/>
         <location filename="../src/ui/setup_dialog.cpp" line="163"/>
-        <source>输入 6-20 位识别码</source>
-        <translation>Enter 6-20 character code</translation>
+        <source>输入 1-6 位识别码</source>
+        <translation>Enter 1-6 character code</translation>
     </message>
     <message>
         <location filename="../src/ui/setup_dialog.cpp" line="131"/>
