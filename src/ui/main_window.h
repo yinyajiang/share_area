@@ -1,15 +1,15 @@
 #pragma once
-#include <QMainWindow>
-#include <QWidget>
-#include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QHostAddress>
 #include <QLabel>
-#include <QPushButton>
+#include <QMainWindow>
 #include <QMap>
 #include <QPair>
-#include <QHostAddress>
+#include <QPushButton>
 #include <QSvgRenderer>
 #include <QTranslator>
+#include <QVBoxLayout>
+#include <QWidget>
 
 // 前向声明
 class DropAreaWidget;
@@ -17,63 +17,63 @@ class FileListWidget;
 class SystemTray;
 class PeerDiscovery;
 class FileTransferManager;
+class BreathingDot;
 
 #include "core/shared_file.h"
-#include "core/app_settings.h"
-
-#include "ui/breathing_dot.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
-public:
-    explicit MainWindow(QWidget* parent = nullptr);
+  public:
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
     void initialize();
-    void setTranslator(QTranslator* translator);
+    void setTranslator(QTranslator *translator);
 
-protected:
-    void closeEvent(QCloseEvent* event) override;
-    void changeEvent(QEvent* event) override;
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void paintEvent(QPaintEvent* event) override;
-    bool eventFilter(QObject* watched, QEvent* event) override;
+  protected:
+    void closeEvent(QCloseEvent *event) override;
+    void changeEvent(QEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
-private slots:
-    void onFilesDropped(const QList<QUrl>& urls);
-    void onPeerFound(const QString& deviceId, const QString& deviceName, const QHostAddress& addr, int port);
-    void onPeerLost(const QString& deviceId);
-    void onFileShared(const SharedFileInfo& file);
-    void onFileRemoved(const QString& fileId, const QString& deviceId);
-    void onDownloadProgress(const QString& fileId, qint64 received, qint64 total);
-    void onDownloadComplete(const QString& fileId, const QString& path);
-    void onDownloadError(const QString& fileId, const QString& error);
-    void onChangeLanguage(const QString& lang);
+  private slots:
+    void onFilesDropped(const QList<QUrl> &urls);
+    void onPeerFound(const QString &deviceId, const QString &deviceName,
+                     const QHostAddress &addr, int port);
+    void onPeerLost(const QString &deviceId);
+    void onFileShared(const SharedFileInfo &file);
+    void onFileRemoved(const QString &fileId, const QString &deviceId);
+    void onDownloadProgress(const QString &fileId, qint64 received,
+                            qint64 total);
+    void onDownloadComplete(const QString &fileId, const QString &path);
+    void onDownloadError(const QString &fileId, const QString &error);
+    void onChangeLanguage(const QString &lang);
     void onChangeCode();
 
-private:
+  private:
     // UI 组件
-    QWidget* m_centralWidget = nullptr;
-    QVBoxLayout* m_mainLayout = nullptr;
-    QWidget* m_titleBar = nullptr;
-    QPushButton* m_closeButton = nullptr;
-    QLabel* m_titleLabel = nullptr;
-    QLabel* m_onlineLabel = nullptr;
-    BreathingDot* m_breathingDot = nullptr;
-    QLabel* m_separatorLabel = nullptr;
-    DropAreaWidget* m_dropArea = nullptr;
-    FileListWidget* m_fileList = nullptr;
-    SystemTray* m_trayIcon = nullptr;
+    QWidget *m_centralWidget = nullptr;
+    QVBoxLayout *m_mainLayout = nullptr;
+    QWidget *m_titleBar = nullptr;
+    QPushButton *m_closeButton = nullptr;
+    QLabel *m_titleLabel = nullptr;
+    QLabel *m_onlineLabel = nullptr;
+    BreathingDot *m_breathingDot = nullptr;
+    QLabel *m_separatorLabel = nullptr;
+    DropAreaWidget *m_dropArea = nullptr;
+    FileListWidget *m_fileList = nullptr;
+    SystemTray *m_trayIcon = nullptr;
 
     // 网络组件
-    PeerDiscovery* m_discovery = nullptr;
-    FileTransferManager* m_transferManager = nullptr;
+    PeerDiscovery *m_discovery = nullptr;
+    FileTransferManager *m_transferManager = nullptr;
 
     // 翻译
-    QTranslator* m_translator = nullptr;
+    QTranslator *m_translator = nullptr;
 
     // 数据
     QMap<QString, SharedFileInfo> m_localSharedFiles;
@@ -88,7 +88,7 @@ private:
     bool m_forceQuit = false;
 
     // SVG 背景渲染器
-    QSvgRenderer* m_bgRenderer = nullptr;
+    QSvgRenderer *m_bgRenderer = nullptr;
 
     void setupUI();
     void setupTitleBar();
