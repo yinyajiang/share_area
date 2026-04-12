@@ -98,26 +98,22 @@
 <context>
     <name>SetupDialog</name>
     <message>
-        <location filename="../src/ui/setup_dialog.cpp" line="94"/>
-        <location filename="../src/ui/setup_dialog.cpp" line="161"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="163"/>
         <source>关闭</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../src/ui/setup_dialog.cpp" line="102"/>
-        <location filename="../src/ui/setup_dialog.cpp" line="162"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="164"/>
         <source>请输入识别码以加入分享组</source>
         <translation>请输入识别码以加入分享组</translation>
     </message>
     <message>
-        <location filename="../src/ui/setup_dialog.cpp" line="110"/>
-        <location filename="../src/ui/setup_dialog.cpp" line="163"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="165"/>
         <source>输入 1-6 位识别码</source>
         <translation>输入 1-6 位识别码</translation>
     </message>
     <message>
-        <location filename="../src/ui/setup_dialog.cpp" line="131"/>
-        <location filename="../src/ui/setup_dialog.cpp" line="164"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="166"/>
         <source>确认</source>
         <translation>确认</translation>
     </message>
