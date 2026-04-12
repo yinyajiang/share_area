@@ -65,6 +65,17 @@ void SetupDialog::mouseReleaseEvent(QMouseEvent* event) {
     event->accept();
 }
 
+bool SetupDialog::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == m_closeButton) {
+        if (event->type() == QEvent::Enter) {
+            m_closeButton->setIcon(QIcon(QStringLiteral(":/icons/close-hover.svg")));
+        } else if (event->type() == QEvent::Leave) {
+            m_closeButton->setIcon(QIcon(QStringLiteral(":/icons/close.svg")));
+        }
+    }
+    return QDialog::eventFilter(watched, event);
+}
+
 void SetupDialog::setupUI() {
     setWindowTitle(QStringLiteral("ShareArea"));
     setFixedSize(400, 240);
@@ -90,11 +101,13 @@ void SetupDialog::setupUI() {
 
     m_closeButton = new QPushButton(this);
     m_closeButton->setFixedSize(28, 28);
-    m_closeButton->setText(QString::fromUtf8("\xc3\x97")); // ×
+    m_closeButton->setIcon(QIcon(QStringLiteral(":/icons/close.svg")));
+    m_closeButton->setIconSize(QSize(14, 14));
     m_closeButton->setToolTip(tr("关闭"));
     m_closeButton->setStyleSheet(QStringLiteral(
-        "QPushButton { background:transparent; color:#78716c; border:none; border-radius:14px; font-size:16px; font-weight:bold; }"
-        "QPushButton:hover { background:rgba(239,68,68,0.10); color:#dc2626; }"));
+        "QPushButton { background:transparent; border:none; border-radius:14px; }"
+        "QPushButton:hover { background:rgba(239,68,68,0.10); }"));
+    m_closeButton->installEventFilter(this);
     topBar->addWidget(m_closeButton);
     mainLayout->addLayout(topBar);
 

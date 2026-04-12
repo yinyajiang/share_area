@@ -177,7 +177,9 @@ void MainWindow::setupTitleBar() {
   m_closeButton = new QPushButton(this);
   m_closeButton->setFixedSize(28, 28);
   m_closeButton->setToolTip(tr("关闭"));
-  m_closeButton->setText(QString::fromUtf8("\xc3\x97")); // ×
+  m_closeButton->setIcon(QIcon(QStringLiteral(":/icons/close.svg")));
+  m_closeButton->setIconSize(QSize(14, 14));
+  m_closeButton->installEventFilter(this);
   layout->addWidget(m_closeButton);
 
   connect(m_closeButton, &QPushButton::clicked, this, [this]() {
@@ -414,6 +416,17 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 // ---- 事件 ----
+bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+  if (watched == m_closeButton) {
+    if (event->type() == QEvent::Enter) {
+      m_closeButton->setIcon(QIcon(QStringLiteral(":/icons/close-hover.svg")));
+    } else if (event->type() == QEvent::Leave) {
+      m_closeButton->setIcon(QIcon(QStringLiteral(":/icons/close.svg")));
+    }
+  }
+  return QMainWindow::eventFilter(watched, event);
+}
+
 void MainWindow::closeEvent(QCloseEvent *event) {
   if (m_trayIcon && m_trayIcon->isVisible() && !m_forceQuit) {
     hide();

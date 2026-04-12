@@ -46,7 +46,7 @@
     <name>MainWindow</name>
     <message numerus="yes">
         <location filename="../src/ui/main_window.cpp" line="169"/>
-        <location filename="../src/ui/main_window.cpp" line="578"/>
+        <location filename="../src/ui/main_window.cpp" line="591"/>
         <source>%n 在线</source>
         <translation>
             <numerusform>%n 在线</numerusform>
@@ -54,43 +54,43 @@
     </message>
     <message>
         <location filename="../src/ui/main_window.cpp" line="179"/>
-        <location filename="../src/ui/main_window.cpp" line="570"/>
+        <location filename="../src/ui/main_window.cpp" line="583"/>
         <source>关闭</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="218"/>
-        <location filename="../src/ui/main_window.cpp" line="569"/>
+        <location filename="../src/ui/main_window.cpp" line="220"/>
+        <location filename="../src/ui/main_window.cpp" line="582"/>
         <source>其他设备分享的文件</source>
         <translation>其他设备分享的文件</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="481"/>
+        <location filename="../src/ui/main_window.cpp" line="494"/>
         <source>设备上线</source>
         <translation>设备上线</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="482"/>
+        <location filename="../src/ui/main_window.cpp" line="495"/>
         <source>%1 已加入分享组</source>
         <translation>%1 已加入分享组</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="513"/>
+        <location filename="../src/ui/main_window.cpp" line="526"/>
         <source>下载完成</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="513"/>
+        <location filename="../src/ui/main_window.cpp" line="526"/>
         <source>文件已成功下载</source>
         <translation>文件已成功下载</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="518"/>
+        <location filename="../src/ui/main_window.cpp" line="531"/>
         <source>下载失败</source>
         <translation>下载失败</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="518"/>
+        <location filename="../src/ui/main_window.cpp" line="531"/>
         <source>无法下载文件：%1</source>
         <translation>无法下载文件：%1</translation>
     </message>
@@ -98,22 +98,26 @@
 <context>
     <name>SetupDialog</name>
     <message>
-        <location filename="../src/ui/setup_dialog.cpp" line="163"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="106"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="174"/>
         <source>关闭</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../src/ui/setup_dialog.cpp" line="164"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="115"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="175"/>
         <source>请输入识别码以加入分享组</source>
         <translation>请输入识别码以加入分享组</translation>
     </message>
     <message>
-        <location filename="../src/ui/setup_dialog.cpp" line="165"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="123"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="176"/>
         <source>输入 1-6 位识别码</source>
         <translation>输入 1-6 位识别码</translation>
     </message>
     <message>
-        <location filename="../src/ui/setup_dialog.cpp" line="166"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="144"/>
+        <location filename="../src/ui/setup_dialog.cpp" line="177"/>
         <source>确认</source>
         <translation>确认</translation>
     </message>

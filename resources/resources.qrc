@@ -5,6 +5,8 @@
         <file>icons/logo.svg</file>
         <file>icons/drop-area.svg</file>
         <file>icons/empty-list.svg</file>
+        <file>icons/close.svg</file>
+        <file>icons/close-hover.svg</file>
         <file>images/window-bg.svg</file>
     </qresource>
 </RCC>
