@@ -29,21 +29,17 @@
         <location filename="../src/ui/file_list_widget.cpp" line="174"/>
         <location filename="../src/ui/file_list_widget.cpp" line="191"/>
         <source>删除</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location filename="../src/ui/file_list_widget.cpp" line="108"/>
         <source>取消</source>
-        <translation type="unfinished"></translation>
+        <translation>取消</translation>
     </message>
     <message>
         <location filename="../src/ui/file_list_widget.cpp" line="177"/>
         <source>%1 · 来自 %2 · 已下载</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>下载完成</source>
-        <translation type="vanished">下载完成</translation>
+        <translation>%1 · 来自 %2 · 已下载</translation>
     </message>
 </context>
 <context>
@@ -54,27 +50,23 @@
         <source>暂无远程文件</source>
         <translation>暂无远程文件</translation>
     </message>
-    <message>
-        <source>保存文件</source>
-        <translation type="vanished">保存文件</translation>
-    </message>
 </context>
 <context>
     <name>LogWindow</name>
     <message>
         <location filename="../src/ui/log_window.cpp" line="33"/>
         <source>调试日志</source>
-        <translation type="unfinished"></translation>
+        <translation>调试日志</translation>
     </message>
     <message>
         <location filename="../src/ui/log_window.cpp" line="60"/>
         <source>复制全部</source>
-        <translation type="unfinished"></translation>
+        <translation>复制全部</translation>
     </message>
     <message>
         <location filename="../src/ui/log_window.cpp" line="75"/>
         <source>清空</source>
-        <translation type="unfinished"></translation>
+        <translation>清空</translation>
     </message>
 </context>
 <context>
@@ -187,7 +179,7 @@
         <location filename="../src/ui/system_tray.cpp" line="52"/>
         <location filename="../src/ui/system_tray.cpp" line="140"/>
         <source>调试日志</source>
-        <translation type="unfinished"></translation>
+        <translation>调试日志</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="60"/>

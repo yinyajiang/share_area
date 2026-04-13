@@ -29,21 +29,17 @@
         <location filename="../src/ui/file_list_widget.cpp" line="174"/>
         <location filename="../src/ui/file_list_widget.cpp" line="191"/>
         <source>删除</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete</translation>
     </message>
     <message>
         <location filename="../src/ui/file_list_widget.cpp" line="108"/>
         <source>取消</source>
-        <translation type="unfinished"></translation>
+        <translation>Cancel</translation>
     </message>
     <message>
         <location filename="../src/ui/file_list_widget.cpp" line="177"/>
         <source>%1 · 来自 %2 · 已下载</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>下载完成</source>
-        <translation type="vanished">Download complete</translation>
+        <translation>%1 · from %2 · Downloaded</translation>
     </message>
 </context>
 <context>
@@ -54,27 +50,23 @@
         <source>暂无远程文件</source>
         <translation>No remote files yet</translation>
     </message>
-    <message>
-        <source>保存文件</source>
-        <translation type="vanished">Save File</translation>
-    </message>
 </context>
 <context>
     <name>LogWindow</name>
     <message>
         <location filename="../src/ui/log_window.cpp" line="33"/>
         <source>调试日志</source>
-        <translation type="unfinished"></translation>
+        <translation>Debug Log</translation>
     </message>
     <message>
         <location filename="../src/ui/log_window.cpp" line="60"/>
         <source>复制全部</source>
-        <translation type="unfinished"></translation>
+        <translation>Copy All</translation>
     </message>
     <message>
         <location filename="../src/ui/log_window.cpp" line="75"/>
         <source>清空</source>
-        <translation type="unfinished"></translation>
+        <translation>Clear</translation>
     </message>
 </context>
 <context>
@@ -85,7 +77,6 @@
         <source>%n 在线</source>
         <translation>
             <numerusform>%n online</numerusform>
-            <numerusform></numerusform>
         </translation>
     </message>
     <message>
@@ -188,7 +179,7 @@
         <location filename="../src/ui/system_tray.cpp" line="52"/>
         <location filename="../src/ui/system_tray.cpp" line="140"/>
         <source>调试日志</source>
-        <translation type="unfinished"></translation>
+        <translation>Debug Log</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="60"/>
