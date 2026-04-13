@@ -10,7 +10,11 @@ set(CMAKE_AUTOUIC ON)
 # Qt path
 if(NOT DEFINED CMAKE_PREFIX_PATH)
     if(APPLE)
-        set(CMAKE_PREFIX_PATH "/Users/yajiang/Qt6.10/6.10.3/macos")
+        # 设置多个 Qt 路径，CMake 会依次尝试
+        set(CMAKE_PREFIX_PATH
+            "/Users/yajiang/Qt6.10/6.10.3/macos"
+            "/Users/echo/Qt/6.10.2/macos"
+        )
     elseif(WIN32)
         # User should set CMAKE_PREFIX_PATH manually on Windows
     endif()
