@@ -207,6 +207,11 @@ void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
 
     emit uploadStarted(fileId);
 
+    // 连接 bytesWritten 一次，持续发送数据直到完成
+    connect(socket, &QTcpSocket::bytesWritten, this, [this, socket]() {
+        sendFileChunk(socket);
+    });
+
     // 开始发送文件数据
     sendFileChunk(socket);
 }
@@ -225,25 +230,25 @@ void FileTransferManager::sendFileChunk(QTcpSocket* socket) {
         return;
     }
 
+    // 如果缓冲区堆积太多，等它排空再继续
+    if (socket->bytesToWrite() > Constants::TRANSFER_CHUNK_SIZE * 4) {
+        return;
+    }
+
     // 读取并发送一块数据
     QByteArray chunk = file->read(Constants::TRANSFER_CHUNK_SIZE);
-    qint64 written = socket->write(chunk);
+    if (chunk.isEmpty()) {
+        // 发送完成
+        emit uploadComplete(info.fileId);
+        socket->flush();
+        socket->disconnectFromHost();
+        return;
+    }
 
+    qint64 written = socket->write(chunk);
     if (written > 0) {
         info.bytesTransferred += written;
         emit uploadProgress(info.fileId, info.bytesTransferred, info.fileSize);
-
-        // 如果还有数据，继续发送
-        if (!file->atEnd()) {
-            connect(socket, &QTcpSocket::bytesWritten, this, [this, socket](qint64) {
-                sendFileChunk(socket);
-            });
-        } else {
-            // 传输完成
-            emit uploadComplete(info.fileId);
-            socket->flush();
-            socket->disconnectFromHost();
-        }
     }
 }
 
