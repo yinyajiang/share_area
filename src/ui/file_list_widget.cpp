@@ -158,7 +158,6 @@ void FileListItemWidget::updateProgress(qint64 received, qint64 total) {
             }
         }
     }
-    update();
 }
 
 void FileListItemWidget::setLocalSavePath(const QString& path) {

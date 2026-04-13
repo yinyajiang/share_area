@@ -3,6 +3,30 @@
 #include <QFile>
 #include <QDir>
 #include <QNetworkProxy>
+#include <QDateTime>
+
+namespace {
+constexpr qint64 kSocketBufferSize =
+    static_cast<qint64>(Constants::TRANSFER_CHUNK_SIZE) * Constants::TRANSFER_PIPELINE_CHUNKS;
+
+bool shouldReportProgress(TransferInfo& info) {
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    const bool firstReport = info.lastProgressAtMs == 0;
+    const bool reachedBytes =
+        (info.bytesTransferred - info.lastProgressBytes) >= Constants::TRANSFER_PROGRESS_UPDATE_BYTES;
+    const bool reachedTime =
+        (now - info.lastProgressAtMs) >= Constants::TRANSFER_PROGRESS_UPDATE_INTERVAL_MS;
+    const bool finished = info.fileSize > 0 && info.bytesTransferred >= info.fileSize;
+
+    if (!(firstReport || reachedBytes || reachedTime || finished)) {
+        return false;
+    }
+
+    info.lastProgressAtMs = now;
+    info.lastProgressBytes = info.bytesTransferred;
+    return true;
+}
+}  // namespace
 
 FileTransferManager::FileTransferManager(QObject* parent)
     : QObject(parent)
@@ -75,6 +99,9 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
 
     QTcpSocket* socket = new QTcpSocket(this);
     socket->setProxy(QNetworkProxy::NoProxy);  // 绕过系统代理
+    socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+    socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, kSocketBufferSize);
+    socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, kSocketBufferSize);
     TransferInfo info;
     info.fileId = fileInfo.fileId;
     info.fileName = fileInfo.fileName;
@@ -143,6 +170,9 @@ void FileTransferManager::cancelDownload(const QString& fileId) {
 
 void FileTransferManager::onNewConnection() {
     QTcpSocket* clientSocket = m_server->nextPendingConnection();
+    clientSocket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+    clientSocket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, kSocketBufferSize);
+    clientSocket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, kSocketBufferSize);
 
     // 标记为上传连接，使 readyRead 路由到 handleClientRequest
     TransferInfo info;
@@ -240,6 +270,8 @@ void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
     info.filePath = fileInfo.filePath;
     info.fileSize = file->size();
     info.bytesTransferred = 0;
+    info.lastProgressBytes = 0;
+    info.lastProgressAtMs = 0;
     info.isUpload = true;
     info.socket = socket;
 
@@ -247,6 +279,7 @@ void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
 
     // 存储文件句柄供后续使用
     socket->setProperty("file", QVariant::fromValue(file));
+    socket->setProperty("upload_finished", false);
 
     emit uploadStarted(fileId);
 
@@ -263,6 +296,9 @@ void FileTransferManager::sendFileChunk(QTcpSocket* socket) {
     if (!m_activeTransfers.contains(socket)) {
         return;
     }
+    if (socket->property("upload_finished").toBool()) {
+        return;
+    }
 
     TransferInfo& info = m_activeTransfers[socket];
     QFile* file = socket->property("file").value<QFile*>();
@@ -273,25 +309,39 @@ void FileTransferManager::sendFileChunk(QTcpSocket* socket) {
         return;
     }
 
-    // 如果缓冲区堆积太多，等它排空再继续
-    if (socket->bytesToWrite() > Constants::TRANSFER_CHUNK_SIZE * 4) {
-        return;
-    }
+    while (socket->bytesToWrite() < kSocketBufferSize) {
+        // 读取并发送一块数据
+        QByteArray chunk = file->read(Constants::TRANSFER_CHUNK_SIZE);
+        if (chunk.isEmpty()) {
+            if (file->atEnd()) {
+                socket->setProperty("upload_finished", true);
+                emit uploadComplete(info.fileId);
+                socket->flush();
+                socket->disconnectFromHost();
+            } else {
+                qWarning("Failed to read source file while uploading");
+                socket->disconnectFromHost();
+            }
+            return;
+        }
 
-    // 读取并发送一块数据
-    QByteArray chunk = file->read(Constants::TRANSFER_CHUNK_SIZE);
-    if (chunk.isEmpty()) {
-        // 发送完成
-        emit uploadComplete(info.fileId);
-        socket->flush();
-        socket->disconnectFromHost();
-        return;
-    }
+        const qint64 written = socket->write(chunk);
+        if (written <= 0) {
+            return;
+        }
+        if (written < chunk.size()) {
+            const qint64 rollbackBytes = chunk.size() - written;
+            if (!file->seek(file->pos() - rollbackBytes)) {
+                qWarning("Failed to rollback file cursor after partial socket write");
+                socket->disconnectFromHost();
+                return;
+            }
+        }
 
-    qint64 written = socket->write(chunk);
-    if (written > 0) {
         info.bytesTransferred += written;
-        emit uploadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+        if (shouldReportProgress(info)) {
+            emit uploadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+        }
     }
 }
 
@@ -341,6 +391,10 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
         }
 
         info.fileSize = parts[1].toLongLong();
+        if (info.fileSize <= 0) {
+            reportDownloadError(QStringLiteral("Invalid file size"));
+            return;
+        }
 
         // 打开文件准备写入
         QDir dir;
@@ -362,15 +416,31 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
     // 写入接收到的数据
     QFile* file = socket->property("file").value<QFile*>();
     if (file && file->isOpen()) {
-        file->write(m_buffers[socket]);
-        info.bytesTransferred += m_buffers[socket].size();
-        m_buffers[socket].clear();
+        QByteArray& bufferedData = m_buffers[socket];
+        qint64 totalWritten = 0;
+        while (totalWritten < bufferedData.size()) {
+            const qint64 written = file->write(
+                bufferedData.constData() + totalWritten,
+                bufferedData.size() - totalWritten);
+            if (written <= 0) {
+                reportDownloadError(QStringLiteral("Failed to write local file"));
+                return;
+            }
+            totalWritten += written;
+        }
+        bufferedData.clear();
+        info.bytesTransferred += totalWritten;
 
-        emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+        if (shouldReportProgress(info)) {
+            emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+        }
 
         // 检查是否完成
         if (info.bytesTransferred >= info.fileSize) {
             file->close();
+            if (info.lastProgressBytes < info.bytesTransferred) {
+                emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+            }
             emit downloadComplete(info.fileId, info.filePath);
             socket->disconnectFromHost();
         }

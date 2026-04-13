@@ -13,6 +13,8 @@ struct TransferInfo {
     QString filePath;     // source (upload) or dest (download)
     qint64 fileSize = 0;
     qint64 bytesTransferred = 0;
+    qint64 lastProgressBytes = 0;
+    qint64 lastProgressAtMs = 0;
     bool isUpload = false;
     bool headerParsed = false;  // download response header parsed
     QTcpSocket* socket = nullptr;
