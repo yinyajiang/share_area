@@ -1,9 +1,9 @@
 #include "file_list_widget.h"
-#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QStyle>
 #include <QFileInfo>
 #include <QStandardPaths>
+#include <QDir>
 #include <QIcon>
 
 // ==================== FileListItemWidget ====================
@@ -14,9 +14,13 @@ FileListItemWidget::FileListItemWidget(const SharedFileInfo& fileInfo, QWidget* 
 }
 
 void FileListItemWidget::setupUI() {
-    auto* layout = new QVBoxLayout(this);
-    layout->setSpacing(6);
-    layout->setContentsMargins(12, 10, 12, 10);
+    auto* topLayout = new QHBoxLayout(this);
+    topLayout->setSpacing(8);
+    topLayout->setContentsMargins(12, 10, 8, 10);
+
+    // 左侧文件信息
+    auto* infoLayout = new QVBoxLayout();
+    infoLayout->setSpacing(4);
 
     // 文件名
     m_nameLabel = new QLabel(m_fileInfo.fileName, this);
@@ -25,7 +29,7 @@ void FileListItemWidget::setupUI() {
     nameFont.setPointSize(12);
     m_nameLabel->setFont(nameFont);
     m_nameLabel->setStyleSheet(QStringLiteral("QLabel { color: #292524; }"));
-    layout->addWidget(m_nameLabel);
+    infoLayout->addWidget(m_nameLabel);
 
     // 信息行（大小 + 来源）
     m_infoLabel = new QLabel(this);
@@ -35,7 +39,7 @@ void FileListItemWidget::setupUI() {
     m_infoLabel->setStyleSheet(QStringLiteral("QLabel { color: #78716c; }"));
     QString infoText = tr("%1 · 来自 %2").arg(formatSize(m_fileInfo.fileSize), m_fileInfo.deviceName);
     m_infoLabel->setText(infoText);
-    layout->addWidget(m_infoLabel);
+    infoLayout->addWidget(m_infoLabel);
 
     // 进度条（初始隐藏）
     m_progressBar = new QProgressBar(this);
@@ -43,9 +47,9 @@ void FileListItemWidget::setupUI() {
     m_progressBar->setValue(0);
     m_progressBar->setTextVisible(true);
     m_progressBar->setFormat(tr("%p%"));
-    m_progressBar->setMaximumHeight(8);
+    m_progressBar->setMaximumHeight(6);
     m_progressBar->hide();
-    layout->addWidget(m_progressBar);
+    infoLayout->addWidget(m_progressBar);
 
     // 状态标签（初始隐藏）
     m_statusLabel = new QLabel(this);
@@ -53,7 +57,38 @@ void FileListItemWidget::setupUI() {
     statusFont.setPointSize(10);
     m_statusLabel->setFont(statusFont);
     m_statusLabel->hide();
-    layout->addWidget(m_statusLabel);
+    infoLayout->addWidget(m_statusLabel);
+
+    topLayout->addLayout(infoLayout, 1);
+
+    // 右侧删除按钮
+    m_deleteButton = new QPushButton(this);
+    m_deleteButton->setFixedSize(20, 20);
+    m_deleteButton->setCursor(Qt::PointingHandCursor);
+    m_deleteButton->setToolTip(tr("删除"));
+    m_deleteButton->hide();  // 默认隐藏，hover 时由 QSS 控制
+
+    m_deleteButton->setStyleSheet(R"(
+        QPushButton {
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+        }
+        QPushButton:hover {
+            background: rgba(220, 38, 38, 0.12);
+        }
+    )");
+
+    // 用 SVG 图标：× 符号
+    m_deleteButton->setIcon(
+        QIcon(QStringLiteral(":/icons/close.svg")));
+    m_deleteButton->setIconSize(QSize(12, 12));
+
+    connect(m_deleteButton, &QPushButton::clicked, this, [this]() {
+        emit deleteRequested(m_fileInfo.fileId);
+    });
+
+    topLayout->addWidget(m_deleteButton);
 }
 
 void FileListItemWidget::updateProgress(qint64 received, qint64 total) {
@@ -63,7 +98,7 @@ void FileListItemWidget::updateProgress(qint64 received, qint64 total) {
         m_progressBar->show();
 
         if (received >= total) {
-            m_statusLabel->setText(tr("下载完成"));
+            m_statusLabel->setText(tr("已下载"));
             m_statusLabel->setStyleSheet(QStringLiteral("QLabel { color: #27ae60; }"));
             m_statusLabel->show();
         } else {
@@ -71,6 +106,23 @@ void FileListItemWidget::updateProgress(qint64 received, qint64 total) {
         }
     }
     update();
+}
+
+void FileListItemWidget::setLocalSavePath(const QString& path) {
+    m_fileInfo.localSavePath = path;
+}
+
+void FileListItemWidget::markAsDownloaded() {
+    // 显示已下载状态
+    m_progressBar->hide();
+    m_statusLabel->setText(tr("已下载"));
+    m_statusLabel->setStyleSheet(QStringLiteral("QLabel { color: #27ae60; }"));
+    m_statusLabel->show();
+
+    // 信息行追加已下载标记
+    QString infoText = tr("%1 · 来自 %2 · 已下载")
+                           .arg(formatSize(m_fileInfo.fileSize), m_fileInfo.deviceName);
+    m_infoLabel->setText(infoText);
 }
 
 QString FileListItemWidget::formatSize(qint64 bytes) {
@@ -122,8 +174,9 @@ void FileListWidget::setupUI() {
     m_listWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     m_listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_listWidget->setSpacing(4);
+    m_listWidget->setMouseTracking(true);
 
-    // 应用样式 - 毛玻璃卡片
+    // 应用样式 - 毛玻璃卡片 + hover 显示删除按钮
     m_listWidget->setStyleSheet(R"(
         QListWidget {
             background: transparent;
@@ -166,6 +219,8 @@ void FileListWidget::addFile(const SharedFileInfo& file) {
 
     // 创建自定义 widget
     auto* widget = new FileListItemWidget(file, m_listWidget);
+    connect(widget, &FileListItemWidget::deleteRequested,
+            this, &FileListWidget::onDeleteRequested);
 
     m_listWidget->addItem(item);
     m_listWidget->setItemWidget(item, widget);
@@ -218,6 +273,57 @@ void FileListWidget::updateTransferProgress(const QString& fileId, qint64 receiv
     }
 }
 
+void FileListWidget::updateFileSavePath(const QString& fileId, const QString& savePath) {
+    // 更新文件信息中的保存路径
+    auto infoIt = m_fileInfos.find(fileId);
+    if (infoIt != m_fileInfos.end()) {
+        infoIt.value().localSavePath = savePath;
+    }
+
+    // 更新列表项 widget
+    auto itemIt = m_items.find(fileId);
+    if (itemIt != m_items.end()) {
+        auto* widget = qobject_cast<FileListItemWidget*>(
+            m_listWidget->itemWidget(itemIt.value()));
+        if (widget) {
+            widget->setLocalSavePath(savePath);
+            widget->markAsDownloaded();
+        }
+
+        // 移到列表末尾
+        moveItemToEnd(fileId);
+    }
+}
+
+void FileListWidget::moveItemToEnd(const QString& fileId) {
+    auto it = m_items.find(fileId);
+    if (it == m_items.end()) return;
+
+    auto* item = it.value();
+    int row = m_listWidget->row(item);
+
+    // 已经在末尾则不需要移动
+    if (row == m_listWidget->count() - 1) return;
+
+    // 取出并重新插入到末尾
+    m_listWidget->takeItem(row);
+    m_listWidget->insertItem(m_listWidget->count(), item);
+
+    // 重新设置 widget（takeItem 会断开）
+    auto* widget = qobject_cast<FileListItemWidget*>(
+        m_listWidget->itemWidget(item));
+    // widget 在 takeItem 后可能被删除，需要重新创建
+    if (!widget) {
+        auto infoIt = m_fileInfos.find(fileId);
+        if (infoIt != m_fileInfos.end()) {
+            widget = new FileListItemWidget(infoIt.value(), m_listWidget);
+            connect(widget, &FileListItemWidget::deleteRequested,
+                    this, &FileListWidget::onDeleteRequested);
+            m_listWidget->setItemWidget(item, widget);
+        }
+    }
+}
+
 void FileListWidget::onItemDoubleClicked(QListWidgetItem* item) {
     auto* widget = qobject_cast<FileListItemWidget*>(m_listWidget->itemWidget(item));
     if (!widget) {
@@ -230,21 +336,28 @@ void FileListWidget::onItemDoubleClicked(QListWidgetItem* item) {
         return;
     }
 
-    // 弹出保存对话框
-    QString fileName = it.value().fileName;
-    QString suggestedPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-    suggestedPath += QLatin1Char('/') + fileName;
-
-    QString savePath = QFileDialog::getSaveFileName(
-        this,
-        tr("保存文件"),
-        suggestedPath,
-        QString()
-    );
-
-    if (!savePath.isEmpty()) {
-        emit fileDownloadRequested(it.value(), savePath);
+    // 已下载过则直接打开 Finder 定位
+    if (!it.value().localSavePath.isEmpty()) {
+        emit fileDownloadRequested(it.value(), it.value().localSavePath);
+        return;
     }
+
+    // 直接下载到系统 Downloads 目录
+    QString downloadDir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    QDir().mkpath(downloadDir);
+    QString savePath = downloadDir + QLatin1Char('/') + it.value().fileName;
+
+    // 避免文件名冲突
+    if (QFile::exists(savePath)) {
+        savePath = downloadDir + QLatin1Char('/')
+                   + it.value().fileId + QLatin1Char('_') + it.value().fileName;
+    }
+
+    emit fileDownloadRequested(it.value(), savePath);
+}
+
+void FileListWidget::onDeleteRequested(const QString& fileId) {
+    emit fileDeleteRequested(fileId);
 }
 
 void FileListWidget::retranslateUi() {

@@ -7,7 +7,8 @@
 struct SharedFileInfo {
     QString fileId;
     QString fileName;
-    QString filePath;      // local absolute path (only for local files)
+    QString filePath;       // local absolute path (only for local files)
+    QString localSavePath;  // where remote file was saved locally after download
     qint64 fileSize = 0;
     QString deviceId;
     QString deviceName;

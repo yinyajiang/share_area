@@ -13,84 +13,98 @@
 <context>
     <name>FileListItemWidget</name>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="36"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="40"/>
         <source>%1 · 来自 %2</source>
         <translation>%1 · 来自 %2</translation>
     </message>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="45"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="49"/>
         <source>%p%</source>
         <translation>%p%</translation>
     </message>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="66"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="68"/>
+        <source>删除</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/file_list_widget.cpp" line="101"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="118"/>
+        <source>已下载</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/file_list_widget.cpp" line="123"/>
+        <source>%1 · 来自 %2 · 已下载</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>下载完成</source>
-        <translation>下载完成</translation>
+        <translation type="vanished">下载完成</translation>
     </message>
 </context>
 <context>
     <name>FileListWidget</name>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="112"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="251"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="164"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="364"/>
         <source>暂无远程文件</source>
         <translation>暂无远程文件</translation>
     </message>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="240"/>
         <source>保存文件</source>
-        <translation>保存文件</translation>
+        <translation type="vanished">保存文件</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message numerus="yes">
-        <location filename="../src/ui/main_window.cpp" line="118"/>
-        <location filename="../src/ui/main_window.cpp" line="545"/>
+        <location filename="../src/ui/main_window.cpp" line="121"/>
+        <location filename="../src/ui/main_window.cpp" line="574"/>
         <source>%n 在线</source>
         <translation>
             <numerusform>%n 在线</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="128"/>
-        <location filename="../src/ui/main_window.cpp" line="537"/>
+        <location filename="../src/ui/main_window.cpp" line="131"/>
+        <location filename="../src/ui/main_window.cpp" line="566"/>
         <source>关闭</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="169"/>
-        <location filename="../src/ui/main_window.cpp" line="536"/>
+        <location filename="../src/ui/main_window.cpp" line="172"/>
+        <location filename="../src/ui/main_window.cpp" line="565"/>
         <source>其他设备分享的文件</source>
         <translation>其他设备分享的文件</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="447"/>
+        <location filename="../src/ui/main_window.cpp" line="466"/>
         <source>设备上线</source>
         <translation>设备上线</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="448"/>
+        <location filename="../src/ui/main_window.cpp" line="467"/>
         <source>%1 已加入分享组</source>
         <translation>%1 已加入分享组</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="479"/>
+        <location filename="../src/ui/main_window.cpp" line="508"/>
         <source>下载完成</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="479"/>
+        <location filename="../src/ui/main_window.cpp" line="508"/>
         <source>文件已成功下载</source>
         <translation>文件已成功下载</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="484"/>
+        <location filename="../src/ui/main_window.cpp" line="513"/>
         <source>下载失败</source>
         <translation>下载失败</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="485"/>
+        <location filename="../src/ui/main_window.cpp" line="514"/>
         <source>无法下载文件：%1</source>
         <translation>无法下载文件：%1</translation>
     </message>

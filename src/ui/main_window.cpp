@@ -19,7 +19,10 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QProcess>
 #include <QRadialGradient>
+#include <QStandardPaths>
+#include <QDir>
 #include <QSvgRenderer>
 #include <QUuid>
 
@@ -250,6 +253,17 @@ void MainWindow::setupConnections() {
 
     connect(m_fileList, &FileListWidget::fileDownloadRequested, this,
             [this](const SharedFileInfo &file, const QString &savePath) {
+                // savePath 非空且文件已存在 → 已下载过，直接打开 Finder 定位
+                if (!file.localSavePath.isEmpty() && QFile::exists(file.localSavePath)) {
+#ifdef Q_OS_MACOS
+                    QProcess::startDetached(QStringLiteral("open"),
+                        {QStringLiteral("-R"), file.localSavePath});
+#elif defined(Q_OS_WIN)
+                    QProcess::startDetached(QStringLiteral("explorer"),
+                        {QStringLiteral("/select,"), QDir::toNativeSeparators(file.localSavePath)});
+#endif
+                    return;
+                }
                 auto it = m_peerTransferPorts.find(file.deviceId);
                 if (it != m_peerTransferPorts.end()) {
                     m_transferManager->requestFile(
@@ -258,6 +272,11 @@ void MainWindow::setupConnections() {
                     qWarning()
                         << "No transfer info for device:" << file.deviceId;
                 }
+            });
+
+    connect(m_fileList, &FileListWidget::fileDeleteRequested, this,
+            [this](const QString &fileId) {
+                m_fileList->removeFile(fileId);
             });
 
     connect(m_trayIcon, &SystemTray::showWindowRequested, this, [this]() {
@@ -473,8 +492,18 @@ void MainWindow::onDownloadProgress(const QString &fileId, qint64 received,
 
 void MainWindow::onDownloadComplete(const QString &fileId,
                                     const QString &path) {
-    Q_UNUSED(path);
-    qDebug() << "Download complete:" << fileId;
+    qDebug() << "Download complete:" << fileId << "at" << path;
+    m_fileList->updateFileSavePath(fileId, path);
+
+    // 打开 Finder / 资源管理器定位到文件
+#ifdef Q_OS_MACOS
+    QProcess::startDetached(QStringLiteral("open"),
+        {QStringLiteral("-R"), path});
+#elif defined(Q_OS_WIN)
+    QProcess::startDetached(QStringLiteral("explorer"),
+        {QStringLiteral("/select,"), QDir::toNativeSeparators(path)});
+#endif
+
     if (m_trayIcon)
         m_trayIcon->showMessage(tr("下载完成"), tr("文件已成功下载"));
 }

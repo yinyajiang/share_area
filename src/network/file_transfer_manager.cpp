@@ -86,12 +86,25 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
         onSocketError(error);
     });
 
+    // 连接成功后发送文件请求
+    connect(socket, &QTcpSocket::connected, this, [this, socket]() {
+        QByteArray request = QStringLiteral("GET|%1\n").arg(
+            m_activeTransfers[socket].fileId).toUtf8();
+        socket->write(request);
+    });
+
     // 连接到远程服务器
     socket->connectToHost(peerAddress, peerPort);
 }
 
 void FileTransferManager::onNewConnection() {
     QTcpSocket* clientSocket = m_server->nextPendingConnection();
+
+    // 标记为上传连接，使 readyRead 路由到 handleClientRequest
+    TransferInfo info;
+    info.isUpload = true;
+    info.socket = clientSocket;
+    m_activeTransfers[clientSocket] = info;
 
     connect(clientSocket, &QTcpSocket::readyRead, this, [this, clientSocket]() {
         if (m_activeTransfers[clientSocket].isUpload) {
