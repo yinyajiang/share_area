@@ -6,9 +6,12 @@
 #include "ui/breathing_dot.h"
 #include "ui/drop_area_widget.h"
 #include "ui/file_list_widget.h"
-#include "ui/macos_blur.h"
 #include "ui/setup_dialog.h"
 #include "ui/system_tray.h"
+
+#ifdef Q_OS_MACOS
+#include "ui/macos_blur.h"
+#endif
 #include <QApplication>
 #include <QCloseEvent>
 #include <QFileDialog>
@@ -196,6 +199,7 @@ void MainWindow::initialize() {
     m_titleLabel->setText(QStringLiteral("ShareArea · %1").arg(groupCode));
 
     // 启用 macOS 原生毛玻璃效果
+#ifdef Q_OS_MACOS
     if (windowHandle()) {
         enableMacOSBlur(windowHandle());
     } else {
@@ -207,6 +211,7 @@ void MainWindow::initialize() {
             },
             Qt::QueuedConnection);
     }
+#endif
 
     // 恢复保存的窗口透明度
     setWindowOpacity(AppSettings::instance().opacity() / 100.0);

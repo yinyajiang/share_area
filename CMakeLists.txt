@@ -16,7 +16,7 @@ if(NOT DEFINED CMAKE_PREFIX_PATH)
             "/Users/echo/Qt/6.10.2/macos"
         )
     elseif(WIN32)
-        # User should set CMAKE_PREFIX_PATH manually on Windows
+        set(CMAKE_PREFIX_PATH "D:/Qt6.10/6.10.1/msvc2022_64")
     endif()
 endif()
 
@@ -115,5 +115,11 @@ endif()
 if(WIN32)
     set_target_properties(ShareArea PROPERTIES
         WIN32_EXECUTABLE TRUE
+    )
+    # 自动部署 Qt 运行时库
+    add_custom_command(TARGET ShareArea POST_BUILD
+        COMMAND ${CMAKE_PREFIX_PATH}/bin/windeployqt.exe
+            "$<TARGET_FILE:ShareArea>"
+        COMMENT "Deploying Qt runtime libraries..."
     )
 endif()
