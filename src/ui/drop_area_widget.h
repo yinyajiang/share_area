@@ -2,11 +2,12 @@
 #include <QWidget>
 #include <QLabel>
 #include <QUrl>
+#include <QEnterEvent>
 #include <QVBoxLayout>
 
 /**
  * @brief 文件拖放区域组件
- * 支持拖拽文件到区域内进行分享
+ * 支持拖拽文件到区域内进行分享，双击分享剪贴板内容
  */
 class DropAreaWidget : public QWidget {
     Q_OBJECT
@@ -17,6 +18,7 @@ public:
 
 signals:
     void filesDropped(const QList<QUrl>& urls);
+    void shareClipboardRequested();
 
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -24,10 +26,14 @@ protected:
     void dragLeaveEvent(QDragLeaveEvent* event) override;
     void dropEvent(QDropEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 
 private:
     bool m_dragActive = false;
     QLabel* m_hintLabel = nullptr;
+    QLabel* m_subHintLabel = nullptr;
     QLabel* m_iconLabel = nullptr;
 
     void setupUI();

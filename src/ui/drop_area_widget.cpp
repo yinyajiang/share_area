@@ -4,6 +4,7 @@
 #include <QDragLeaveEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
 #include <QBrush>
@@ -22,14 +23,16 @@ void DropAreaWidget::setupUI() {
     // 中心布局
     auto* layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignCenter);
-    layout->setSpacing(12);
+    layout->setSpacing(8);
 
-    // 拖拽区域图标
+    // 拖拽区域图标（固定容器大小，图标在其中缩放不影响布局）
     m_iconLabel = new QLabel(this);
+    m_iconLabel->setFixedSize(72, 72);
     QIcon dropIcon(QStringLiteral(":/icons/drop-area.svg"));
     m_iconLabel->setPixmap(dropIcon.pixmap(64, 64));
     m_iconLabel->setAlignment(Qt::AlignCenter);
     layout->addWidget(m_iconLabel, 0, Qt::AlignCenter);
+    layout->addSpacing(-4);
 
     // 提示文字
     m_hintLabel = new QLabel(tr("拖拽文件到此处分享"), this);
@@ -39,10 +42,20 @@ void DropAreaWidget::setupUI() {
     m_hintLabel->setFont(font);
     m_hintLabel->setStyleSheet(QStringLiteral("QLabel { color: #78716c; }"));
     layout->addWidget(m_hintLabel, 0, Qt::AlignCenter);
+
+    // 副提示（双击分享剪贴板）
+    m_subHintLabel = new QLabel(tr("双击分享剪贴板"), this);
+    m_subHintLabel->setAlignment(Qt::AlignCenter);
+    QFont subFont = m_subHintLabel->font();
+    subFont.setPointSize(10);
+    m_subHintLabel->setFont(subFont);
+    m_subHintLabel->setStyleSheet(QStringLiteral("QLabel { color: rgba(120,113,108,0.45); }"));
+    layout->addWidget(m_subHintLabel, 0, Qt::AlignCenter);
 }
 
 void DropAreaWidget::retranslateUi() {
     m_hintLabel->setText(tr("拖拽文件到此处分享"));
+    m_subHintLabel->setText(tr("双击分享剪贴板"));
 }
 
 void DropAreaWidget::dragEnterEvent(QDragEnterEvent* event) {
@@ -117,4 +130,24 @@ void DropAreaWidget::updateDragState(bool active) {
         m_dragActive = active;
         update();  // 触发重绘
     }
+}
+
+void DropAreaWidget::mouseDoubleClickEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton) {
+        emit shareClipboardRequested();
+    }
+}
+
+void DropAreaWidget::enterEvent(QEnterEvent* event) {
+    Q_UNUSED(event);
+    QIcon dropIcon(QStringLiteral(":/icons/drop-area.svg"));
+    m_iconLabel->setPixmap(dropIcon.pixmap(72, 72));
+    setCursor(Qt::PointingHandCursor);
+}
+
+void DropAreaWidget::leaveEvent(QEvent* event) {
+    Q_UNUSED(event);
+    QIcon dropIcon(QStringLiteral(":/icons/drop-area.svg"));
+    m_iconLabel->setPixmap(dropIcon.pixmap(64, 64));
+    unsetCursor();
 }

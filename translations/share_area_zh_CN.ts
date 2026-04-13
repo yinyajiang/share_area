@@ -4,10 +4,16 @@
 <context>
     <name>DropAreaWidget</name>
     <message>
-        <location filename="../src/ui/drop_area_widget.cpp" line="35"/>
-        <location filename="../src/ui/drop_area_widget.cpp" line="45"/>
+        <location filename="../src/ui/drop_area_widget.cpp" line="38"/>
+        <location filename="../src/ui/drop_area_widget.cpp" line="57"/>
         <source>拖拽文件到此处分享</source>
         <translation>拖拽文件到此处分享</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/drop_area_widget.cpp" line="47"/>
+        <location filename="../src/ui/drop_area_widget.cpp" line="58"/>
+        <source>双击分享剪贴板</source>
+        <translation>双击分享剪贴板</translation>
     </message>
 </context>
 <context>
