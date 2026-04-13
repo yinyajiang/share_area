@@ -579,6 +579,12 @@ void MainWindow::onFileShared(const SharedFileInfo &file) {
              << "id:" << file.fileId
              << "from" << file.deviceName;
     m_fileList->addFile(file);
+
+    if (isHidden()) {
+        show();
+        raise();
+        activateWindow();
+    }
 }
 
 void MainWindow::onFileRemoved(const QString &fileId, const QString &deviceId) {

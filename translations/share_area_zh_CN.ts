@@ -73,7 +73,7 @@
     <name>MainWindow</name>
     <message numerus="yes">
         <location filename="../src/ui/main_window.cpp" line="124"/>
-        <location filename="../src/ui/main_window.cpp" line="683"/>
+        <location filename="../src/ui/main_window.cpp" line="689"/>
         <source>%n 在线</source>
         <translation>
             <numerusform>%n 在线</numerusform>
@@ -81,13 +81,13 @@
     </message>
     <message>
         <location filename="../src/ui/main_window.cpp" line="134"/>
-        <location filename="../src/ui/main_window.cpp" line="675"/>
+        <location filename="../src/ui/main_window.cpp" line="681"/>
         <source>关闭</source>
         <translation>关闭</translation>
     </message>
     <message>
         <location filename="../src/ui/main_window.cpp" line="175"/>
-        <location filename="../src/ui/main_window.cpp" line="674"/>
+        <location filename="../src/ui/main_window.cpp" line="680"/>
         <source>其他设备分享的文件</source>
         <translation>其他设备分享的文件</translation>
     </message>
@@ -102,28 +102,28 @@
         <translation>%1 已加入分享组</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="609"/>
+        <location filename="../src/ui/main_window.cpp" line="615"/>
         <source>下载完成</source>
         <translation>下载完成</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="609"/>
+        <location filename="../src/ui/main_window.cpp" line="615"/>
         <source>文件已成功下载</source>
         <translation>文件已成功下载</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="621"/>
-        <location filename="../src/ui/main_window.cpp" line="626"/>
+        <location filename="../src/ui/main_window.cpp" line="627"/>
+        <location filename="../src/ui/main_window.cpp" line="632"/>
         <source>下载失败</source>
         <translation>下载失败</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="622"/>
+        <location filename="../src/ui/main_window.cpp" line="628"/>
         <source>该文件在对端已失效，请等待对方重新分享后重试。</source>
         <translation>该文件在对端已失效，请等待对方重新分享后重试。</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="627"/>
+        <location filename="../src/ui/main_window.cpp" line="633"/>
         <source>无法下载文件：%1</source>
         <translation>无法下载文件：%1</translation>
     </message>
