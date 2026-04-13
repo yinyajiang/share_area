@@ -14,6 +14,7 @@ struct TransferInfo {
     qint64 fileSize = 0;
     qint64 bytesTransferred = 0;
     bool isUpload = false;
+    bool headerParsed = false;  // download response header parsed
     QTcpSocket* socket = nullptr;
 };
 

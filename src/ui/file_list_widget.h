@@ -6,6 +6,7 @@
 #include <QVBoxLayout>
 #include <QMap>
 #include <QProgressBar>
+#include <QElapsedTimer>
 #include "core/shared_file.h"
 
 /**
@@ -34,6 +35,10 @@ private:
     QProgressBar* m_progressBar = nullptr;
     QLabel* m_statusLabel = nullptr;
     QPushButton* m_deleteButton = nullptr;
+
+    // 速度计算相关
+    QElapsedTimer m_speedTimer;
+    qint64 m_lastReceived = 0;
 
     void setupUI();
     QString formatSize(qint64 bytes);

@@ -28,13 +28,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="102"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="119"/>
-        <source>已下载</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="124"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="139"/>
         <source>%1 · 来自 %2 · 已下载</source>
         <translation type="unfinished"></translation>
     </message>
@@ -46,8 +40,8 @@
 <context>
     <name>FileListWidget</name>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="165"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="382"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="180"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="397"/>
         <source>暂无远程文件</source>
         <translation>No remote files yet</translation>
     </message>
