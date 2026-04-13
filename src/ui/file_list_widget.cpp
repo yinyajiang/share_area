@@ -99,7 +99,9 @@ void FileListItemWidget::setupUI() {
 void FileListItemWidget::updateProgress(qint64 received, qint64 total) {
     if (total > 0) {
         int percent = static_cast<int>((received * 100) / total);
-        m_progressBar->setValue(percent);
+        if (m_progressBar->value() != percent) {
+            m_progressBar->setValue(percent);
+        }
         m_progressBar->show();
 
         // 下载中显示取消按钮
@@ -141,19 +143,15 @@ void FileListItemWidget::updateProgress(qint64 received, qint64 total) {
                 m_lastReceived = received;
             } else {
                 qint64 elapsedMs = m_speedTimer.elapsed();
-                if (elapsedMs > 0) {
+                if (elapsedMs >= 1000) {
                     qint64 bytesDelta = received - m_lastReceived;
                     double speed = bytesDelta / (elapsedMs / 1000.0);  // bytes/sec
-
-                    // 每 1s 更新一次速度显示
-                    if (elapsedMs >= 1000) {
-                        m_lastReceived = received;
-                        m_speedTimer.restart();
-                    }
 
                     m_statusLabel->setText(QStringLiteral("%1/s").arg(formatSize(static_cast<qint64>(speed))));
                     m_statusLabel->setStyleSheet(QStringLiteral("QLabel { color: #78716c; }"));
                     m_statusLabel->show();
+                    m_lastReceived = received;
+                    m_speedTimer.restart();
                 }
             }
         }

@@ -14,7 +14,7 @@
     <name>FileListItemWidget</name>
     <message>
         <location filename="../src/ui/file_list_widget.cpp" line="41"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="204"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="201"/>
         <source>%1 · 来自 %2</source>
         <translation>%1 · from %2</translation>
     </message>
@@ -25,19 +25,19 @@
     </message>
     <message>
         <location filename="../src/ui/file_list_widget.cpp" line="69"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="126"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="174"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="191"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="128"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="171"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="188"/>
         <source>删除</source>
         <translation>Delete</translation>
     </message>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="108"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="110"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="177"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="174"/>
         <source>%1 · 来自 %2 · 已下载</source>
         <translation>%1 · from %2 · Downloaded</translation>
     </message>
@@ -45,8 +45,8 @@
 <context>
     <name>FileListWidget</name>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="256"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="489"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="253"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="486"/>
         <source>暂无远程文件</source>
         <translation>No remote files yet</translation>
     </message>
@@ -72,58 +72,59 @@
 <context>
     <name>MainWindow</name>
     <message numerus="yes">
-        <location filename="../src/ui/main_window.cpp" line="125"/>
-        <location filename="../src/ui/main_window.cpp" line="607"/>
+        <location filename="../src/ui/main_window.cpp" line="124"/>
+        <location filename="../src/ui/main_window.cpp" line="683"/>
         <source>%n 在线</source>
         <translation>
             <numerusform>%n online</numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="135"/>
-        <location filename="../src/ui/main_window.cpp" line="599"/>
+        <location filename="../src/ui/main_window.cpp" line="134"/>
+        <location filename="../src/ui/main_window.cpp" line="675"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="176"/>
-        <location filename="../src/ui/main_window.cpp" line="598"/>
+        <location filename="../src/ui/main_window.cpp" line="175"/>
+        <location filename="../src/ui/main_window.cpp" line="674"/>
         <source>其他设备分享的文件</source>
         <translation>Files shared by other devices</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="485"/>
+        <location filename="../src/ui/main_window.cpp" line="565"/>
         <source>设备上线</source>
         <translation>Device Online</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="486"/>
+        <location filename="../src/ui/main_window.cpp" line="566"/>
         <source>%1 已加入分享组</source>
         <translation>%1 has joined the sharing group</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="529"/>
+        <location filename="../src/ui/main_window.cpp" line="609"/>
         <source>下载完成</source>
         <translation>Download Complete</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="529"/>
+        <location filename="../src/ui/main_window.cpp" line="609"/>
         <source>文件已成功下载</source>
         <translation>File downloaded successfully</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="541"/>
-        <location filename="../src/ui/main_window.cpp" line="546"/>
+        <location filename="../src/ui/main_window.cpp" line="621"/>
+        <location filename="../src/ui/main_window.cpp" line="626"/>
         <source>下载失败</source>
         <translation>Download Failed</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="542"/>
+        <location filename="../src/ui/main_window.cpp" line="622"/>
         <source>该文件在对端已失效，请等待对方重新分享后重试。</source>
         <translation>This file is no longer available on the peer. Ask the sender to share it again and retry.</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="547"/>
+        <location filename="../src/ui/main_window.cpp" line="627"/>
         <source>无法下载文件：%1</source>
         <translation>Failed to download file: %1</translation>
     </message>

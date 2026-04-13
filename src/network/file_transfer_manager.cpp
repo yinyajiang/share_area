@@ -4,10 +4,12 @@
 #include <QDir>
 #include <QNetworkProxy>
 #include <QDateTime>
+#include <array>
 
 namespace {
 constexpr qint64 kSocketBufferSize =
     static_cast<qint64>(Constants::TRANSFER_CHUNK_SIZE) * Constants::TRANSFER_PIPELINE_CHUNKS;
+constexpr qint64 kDownloadIoBufferSize = 64 * 1024;
 
 bool shouldReportProgress(TransferInfo& info) {
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
@@ -102,6 +104,7 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
     socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
     socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, kSocketBufferSize);
     socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, kSocketBufferSize);
+    socket->setReadBufferSize(kSocketBufferSize);
     TransferInfo info;
     info.fileId = fileInfo.fileId;
     info.fileName = fileInfo.fileName;
@@ -173,6 +176,7 @@ void FileTransferManager::onNewConnection() {
     clientSocket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
     clientSocket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, kSocketBufferSize);
     clientSocket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, kSocketBufferSize);
+    clientSocket->setReadBufferSize(kSocketBufferSize);
 
     // 标记为上传连接，使 readyRead 路由到 handleClientRequest
     TransferInfo info;
@@ -280,6 +284,7 @@ void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
     // 存储文件句柄供后续使用
     socket->setProperty("file", QVariant::fromValue(file));
     socket->setProperty("upload_finished", false);
+    m_pendingUploadChunks[socket] = QByteArray();
 
     emit uploadStarted(fileId);
 
@@ -310,6 +315,24 @@ void FileTransferManager::sendFileChunk(QTcpSocket* socket) {
     }
 
     while (socket->bytesToWrite() < kSocketBufferSize) {
+        QByteArray& pendingChunk = m_pendingUploadChunks[socket];
+        if (!pendingChunk.isEmpty()) {
+            const qint64 pendingWritten = socket->write(pendingChunk);
+            if (pendingWritten <= 0) {
+                return;
+            }
+            info.bytesTransferred += pendingWritten;
+            if (pendingWritten < pendingChunk.size()) {
+                pendingChunk.remove(0, pendingWritten);
+            } else {
+                pendingChunk.clear();
+            }
+            if (shouldReportProgress(info)) {
+                emit uploadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+            }
+            continue;
+        }
+
         // 读取并发送一块数据
         QByteArray chunk = file->read(Constants::TRANSFER_CHUNK_SIZE);
         if (chunk.isEmpty()) {
@@ -330,12 +353,7 @@ void FileTransferManager::sendFileChunk(QTcpSocket* socket) {
             return;
         }
         if (written < chunk.size()) {
-            const qint64 rollbackBytes = chunk.size() - written;
-            if (!file->seek(file->pos() - rollbackBytes)) {
-                qWarning("Failed to rollback file cursor after partial socket write");
-                socket->disconnectFromHost();
-                return;
-            }
+            pendingChunk = chunk.mid(written);
         }
 
         info.bytesTransferred += written;
@@ -409,6 +427,14 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
             file->deleteLater();
             return;
         }
+        if (!file->resize(info.fileSize)) {
+            qWarning() << "Failed to pre-allocate target file:" << info.filePath;
+        }
+        if (!file->seek(0)) {
+            reportDownloadError(QStringLiteral("Failed to initialize local file"));
+            file->deleteLater();
+            return;
+        }
 
         socket->setProperty("file", QVariant::fromValue(file));
     }
@@ -416,20 +442,41 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
     // 写入接收到的数据
     QFile* file = socket->property("file").value<QFile*>();
     if (file && file->isOpen()) {
+        auto writeAll = [file](const char* data, qint64 size) -> bool {
+            qint64 totalWritten = 0;
+            while (totalWritten < size) {
+                const qint64 written = file->write(data + totalWritten, size - totalWritten);
+                if (written <= 0) {
+                    return false;
+                }
+                totalWritten += written;
+            }
+            return true;
+        };
+
         QByteArray& bufferedData = m_buffers[socket];
-        qint64 totalWritten = 0;
-        while (totalWritten < bufferedData.size()) {
-            const qint64 written = file->write(
-                bufferedData.constData() + totalWritten,
-                bufferedData.size() - totalWritten);
-            if (written <= 0) {
+        if (!bufferedData.isEmpty()) {
+            if (!writeAll(bufferedData.constData(), bufferedData.size())) {
                 reportDownloadError(QStringLiteral("Failed to write local file"));
                 return;
             }
-            totalWritten += written;
+            info.bytesTransferred += bufferedData.size();
+            bufferedData.clear();
         }
-        bufferedData.clear();
-        info.bytesTransferred += totalWritten;
+
+        std::array<char, static_cast<size_t>(kDownloadIoBufferSize)> ioBuffer{};
+        while (socket->bytesAvailable() > 0) {
+            const qint64 readSize = qMin<qint64>(socket->bytesAvailable(), kDownloadIoBufferSize);
+            const qint64 read = socket->read(ioBuffer.data(), readSize);
+            if (read <= 0) {
+                break;
+            }
+            if (!writeAll(ioBuffer.data(), read)) {
+                reportDownloadError(QStringLiteral("Failed to write local file"));
+                return;
+            }
+            info.bytesTransferred += read;
+        }
 
         if (shouldReportProgress(info)) {
             emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
@@ -488,6 +535,7 @@ void FileTransferManager::cleanupTransfer(QTcpSocket* socket) {
 
     m_activeTransfers.remove(socket);
     m_buffers.remove(socket);
+    m_pendingUploadChunks.remove(socket);
 
     QFile* file = socket->property("file").value<QFile*>();
     if (file) {

@@ -53,8 +53,7 @@ void MainWindow::setTranslator(QTranslator *translator) {
 MainWindow::~MainWindow() {
     if (m_discovery)
         m_discovery->stop();
-    if (m_transferManager)
-        m_transferManager->stopServer();
+    stopTransferService();
 }
 
 // ---- 绘制背景 + 圆角 ----
@@ -217,18 +216,12 @@ void MainWindow::initialize() {
     // 恢复保存的窗口透明度
     setWindowOpacity(AppSettings::instance().opacity() / 100.0);
 
-    // 先启动文件传输服务器，获取端口号
-    m_transferManager = new FileTransferManager(this);
-    if (!m_transferManager->startServer(Constants::DEFAULT_TRANSFER_PORT)) {
-        qWarning() << "Failed to start transfer server on default port, trying "
-                      "random port";
-        m_transferManager->startServer(0);
-    }
-    m_transferManager->setLocalFiles(m_localSharedFiles);
+    // 先启动文件传输服务（独立线程），获取端口号
+    startTransferService();
 
     // 再启动设备发现，确保广播时已携带正确端口
     m_discovery = new PeerDiscovery(groupCode, this);
-    m_discovery->setTransferPort(m_transferManager->transferPort());
+    m_discovery->setTransferPort(m_transferPort);
     m_discovery->start();
 
     setupConnections();
@@ -239,6 +232,72 @@ void MainWindow::initialize() {
     // 默认窗口置顶
     setWindowFlag(Qt::WindowStaysOnTopHint, true);
     show();
+}
+
+void MainWindow::startTransferService() {
+    stopTransferService();
+
+    m_transferThread = new QThread(this);
+    m_transferManager = new FileTransferManager();
+    m_transferManager->moveToThread(m_transferThread);
+    m_transferThread->start();
+
+    bool started = false;
+    int resolvedPort = 0;
+    const QMap<QString, SharedFileInfo> filesSnapshot = m_localSharedFiles;
+    QMetaObject::invokeMethod(
+        m_transferManager,
+        [this, &started, &resolvedPort, filesSnapshot]() {
+            started = m_transferManager->startServer(Constants::DEFAULT_TRANSFER_PORT);
+            if (!started) {
+                qWarning() << "Failed to start transfer server on default port, trying random port";
+                started = m_transferManager->startServer(0);
+            }
+            m_transferManager->setLocalFiles(filesSnapshot);
+            resolvedPort = m_transferManager->transferPort();
+        },
+        Qt::BlockingQueuedConnection);
+
+    if (!started) {
+        qWarning() << "Failed to start transfer service";
+        m_transferPort = 0;
+        return;
+    }
+    m_transferPort = resolvedPort;
+}
+
+void MainWindow::stopTransferService() {
+    if (!m_transferManager && !m_transferThread) {
+        m_transferPort = 0;
+        return;
+    }
+
+    if (m_transferManager && m_transferThread && m_transferThread->isRunning()) {
+        FileTransferManager* manager = m_transferManager;
+        QMetaObject::invokeMethod(
+            manager,
+            [manager]() {
+                manager->stopServer();
+            },
+            Qt::BlockingQueuedConnection);
+        QMetaObject::invokeMethod(
+            manager,
+            [manager]() { manager->deleteLater(); },
+            Qt::BlockingQueuedConnection);
+        m_transferManager = nullptr;
+    } else if (m_transferManager) {
+        delete m_transferManager;
+        m_transferManager = nullptr;
+    }
+
+    if (m_transferThread) {
+        m_transferThread->quit();
+        m_transferThread->wait();
+    }
+
+    delete m_transferThread;
+    m_transferThread = nullptr;
+    m_transferPort = 0;
 }
 
 void MainWindow::setupConnections() {
@@ -276,8 +335,18 @@ void MainWindow::setupConnections() {
                 }
                 auto it = m_peerTransferPorts.find(file.deviceId);
                 if (it != m_peerTransferPorts.end()) {
-                    m_transferManager->requestFile(
-                        file, savePath, it.value().first, it.value().second);
+                    if (!m_transferManager) {
+                        return;
+                    }
+                    FileTransferManager* manager = m_transferManager;
+                    const QHostAddress peerAddress = it.value().first;
+                    const int peerPort = it.value().second;
+                    QMetaObject::invokeMethod(
+                        manager,
+                        [manager, file, savePath, peerAddress, peerPort]() {
+                            manager->requestFile(file, savePath, peerAddress, peerPort);
+                        },
+                        Qt::QueuedConnection);
                 } else {
                     qWarning()
                         << "No transfer info for device:" << file.deviceId;
@@ -291,7 +360,14 @@ void MainWindow::setupConnections() {
 
     connect(m_fileList, &FileListWidget::fileCancelRequested, this,
             [this](const QString &fileId) {
-                m_transferManager->cancelDownload(fileId);
+                if (!m_transferManager) {
+                    return;
+                }
+                FileTransferManager* manager = m_transferManager;
+                QMetaObject::invokeMethod(
+                    manager,
+                    [manager, fileId]() { manager->cancelDownload(fileId); },
+                    Qt::QueuedConnection);
                 m_fileList->resetDownload(fileId);
             });
 
@@ -319,8 +395,7 @@ void MainWindow::setupConnections() {
         m_forceQuit = true;
         if (m_discovery)
             m_discovery->stop();
-        if (m_transferManager)
-            m_transferManager->stopServer();
+        stopTransferService();
         close();
         QApplication::quit();
     });
@@ -329,8 +404,7 @@ void MainWindow::setupConnections() {
     connect(qApp, &QApplication::aboutToQuit, this, [this]() {
         if (m_discovery)
             m_discovery->stop();
-        if (m_transferManager)
-            m_transferManager->stopServer();
+        stopTransferService();
     });
 }
 
@@ -466,8 +540,14 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
             deviceName);
         m_localSharedFiles[sharedFile.fileId] = sharedFile;
 
-        if (m_transferManager)
-            m_transferManager->setLocalFiles(m_localSharedFiles);
+        if (m_transferManager) {
+            FileTransferManager* manager = m_transferManager;
+            const QMap<QString, SharedFileInfo> filesSnapshot = m_localSharedFiles;
+            QMetaObject::invokeMethod(
+                manager,
+                [manager, filesSnapshot]() { manager->setLocalFiles(filesSnapshot); },
+                Qt::QueuedConnection);
+        }
         if (m_discovery)
             m_discovery->announceFile(sharedFile);
 
@@ -580,11 +660,7 @@ void MainWindow::onChangeCode() {
             delete m_discovery;
             m_discovery = nullptr;
         }
-        if (m_transferManager) {
-            m_transferManager->stopServer();
-            delete m_transferManager;
-            m_transferManager = nullptr;
-        }
+        stopTransferService();
         AppSettings::instance().setGroupCode(newCode);
         AppSettings::instance().save();
         m_peerTransferPorts.clear();

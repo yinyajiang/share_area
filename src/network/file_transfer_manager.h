@@ -57,6 +57,7 @@ private:
     QMap<QString, SharedFileInfo> m_localFiles;  // fileId -> info
     QMap<QTcpSocket*, TransferInfo> m_activeTransfers;
     QMap<QTcpSocket*, QByteArray> m_buffers;
+    QMap<QTcpSocket*, QByteArray> m_pendingUploadChunks;
 
     void handleClientRequest(QTcpSocket* socket);
     void handleDownloadResponse(QTcpSocket* socket);

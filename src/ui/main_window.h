@@ -7,6 +7,7 @@
 #include <QPair>
 #include <QPushButton>
 #include <QSvgRenderer>
+#include <QThread>
 #include <QTranslator>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -72,6 +73,7 @@ class MainWindow : public QMainWindow {
     // 网络组件
     PeerDiscovery *m_discovery = nullptr;
     FileTransferManager *m_transferManager = nullptr;
+    QThread *m_transferThread = nullptr;
 
     // 翻译
     QTranslator *m_translator = nullptr;
@@ -79,6 +81,7 @@ class MainWindow : public QMainWindow {
     // 数据
     QMap<QString, SharedFileInfo> m_localSharedFiles;
     QMap<QString, QPair<QHostAddress, int>> m_peerTransferPorts;
+    int m_transferPort = 0;
     QString m_currentLanguage;
 
     // 窗口拖拽
@@ -98,4 +101,6 @@ class MainWindow : public QMainWindow {
     void retranslateUi();
     void checkFirstRun();
     void updateOnlineCount();
+    void startTransferService();
+    void stopTransferService();
 };
