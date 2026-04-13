@@ -86,7 +86,11 @@ void FileListItemWidget::setupUI() {
     m_deleteButton->setIconSize(QSize(12, 12));
 
     connect(m_deleteButton, &QPushButton::clicked, this, [this]() {
-        emit deleteRequested(m_fileInfo.fileId);
+        if (m_downloading) {
+            emit cancelRequested(m_fileInfo.fileId);
+        } else {
+            emit deleteRequested(m_fileInfo.fileId);
+        }
     });
 
     topLayout->addWidget(m_deleteButton);
@@ -98,8 +102,38 @@ void FileListItemWidget::updateProgress(qint64 received, qint64 total) {
         m_progressBar->setValue(percent);
         m_progressBar->show();
 
+        // 下载中显示取消按钮
+        if (!m_downloading) {
+            m_downloading = true;
+            m_deleteButton->setToolTip(tr("取消"));
+            m_deleteButton->setStyleSheet(R"(
+                QPushButton {
+                    background: transparent;
+                    border: none;
+                    border-radius: 10px;
+                }
+                QPushButton:hover {
+                    background: rgba(220, 38, 38, 0.12);
+                }
+            )");
+            m_deleteButton->show();
+        }
+
         if (received >= total) {
+            m_downloading = false;
             m_statusLabel->hide();
+            // 恢复删除按钮样式
+            m_deleteButton->setToolTip(tr("删除"));
+            m_deleteButton->setStyleSheet(R"(
+                QPushButton {
+                    background: transparent;
+                    border: none;
+                    border-radius: 10px;
+                }
+                QPushButton:hover {
+                    background: rgba(220, 38, 38, 0.12);
+                }
+            )");
         } else {
             // 计算下载速度
             if (!m_speedTimer.isValid()) {
@@ -132,12 +166,42 @@ void FileListItemWidget::setLocalSavePath(const QString& path) {
 }
 
 void FileListItemWidget::markAsDownloaded() {
+    m_downloading = false;
     m_progressBar->hide();
     m_statusLabel->hide();
+
+    // 恢复删除按钮
+    m_deleteButton->setToolTip(tr("删除"));
 
     // 信息行追加已下载标记
     QString infoText = tr("%1 · 来自 %2 · 已下载")
                            .arg(formatSize(m_fileInfo.fileSize), m_fileInfo.deviceName);
+    m_infoLabel->setText(infoText);
+}
+
+void FileListItemWidget::resetDownload() {
+    m_downloading = false;
+    m_progressBar->hide();
+    m_progressBar->setValue(0);
+    m_statusLabel->hide();
+    m_speedTimer.invalidate();
+    m_lastReceived = 0;
+
+    // 恢复删除按钮
+    m_deleteButton->setToolTip(tr("删除"));
+    m_deleteButton->setStyleSheet(R"(
+        QPushButton {
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+        }
+        QPushButton:hover {
+            background: rgba(220, 38, 38, 0.12);
+        }
+    )");
+
+    // 恢复原始信息行
+    QString infoText = tr("%1 · 来自 %2").arg(formatSize(m_fileInfo.fileSize), m_fileInfo.deviceName);
     m_infoLabel->setText(infoText);
 }
 
@@ -254,6 +318,8 @@ void FileListWidget::addFile(const SharedFileInfo& file) {
     auto* widget = new FileListItemWidget(file, m_listWidget);
     connect(widget, &FileListItemWidget::deleteRequested,
             this, &FileListWidget::onDeleteRequested);
+    connect(widget, &FileListItemWidget::cancelRequested,
+            this, &FileListWidget::onCancelRequested);
 
     m_listWidget->addItem(item);
     m_listWidget->setItemWidget(item, widget);
@@ -391,6 +457,20 @@ void FileListWidget::onItemDoubleClicked(QListWidgetItem* item) {
 
 void FileListWidget::onDeleteRequested(const QString& fileId) {
     emit fileDeleteRequested(fileId);
+}
+
+void FileListWidget::onCancelRequested(const QString& fileId) {
+    emit fileCancelRequested(fileId);
+}
+
+void FileListWidget::resetDownload(const QString& fileId) {
+    auto it = m_items.find(fileId);
+    if (it != m_items.end()) {
+        auto* widget = qobject_cast<FileListItemWidget*>(m_listWidget->itemWidget(it.value()));
+        if (widget) {
+            widget->resetDownload();
+        }
+    }
 }
 
 void FileListWidget::retranslateUi() {

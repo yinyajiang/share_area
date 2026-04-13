@@ -34,10 +34,19 @@ bool FileTransferManager::startServer(int preferredPort) {
 }
 
 void FileTransferManager::stopServer() {
-    // 关闭所有活跃传输
+    // 关闭所有活跃传输，清理下载中的部分文件
     const QList<QTcpSocket*> sockets = m_activeTransfers.keys();
     for (QTcpSocket* socket : sockets) {
         if (socket) {
+            // 删除未完成的下载文件
+            if (m_activeTransfers.contains(socket)) {
+                const TransferInfo& info = m_activeTransfers[socket];
+                if (!info.isUpload && info.bytesTransferred > 0
+                    && info.bytesTransferred < info.fileSize
+                    && !info.filePath.isEmpty()) {
+                    QFile::remove(info.filePath);
+                }
+            }
             socket->disconnectFromHost();
             cleanupTransfer(socket);
         }
@@ -113,6 +122,23 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
 
     // 连接到远程服务器
     socket->connectToHost(peerAddress, peerPort);
+}
+
+void FileTransferManager::cancelDownload(const QString& fileId) {
+    // 查找该 fileId 对应的下载 socket
+    for (auto it = m_activeTransfers.begin(); it != m_activeTransfers.end(); ++it) {
+        QTcpSocket* socket = it.key();
+        const TransferInfo& info = it.value();
+        if (!info.isUpload && info.fileId == fileId) {
+            // 删除部分下载的文件
+            if (!info.filePath.isEmpty()) {
+                QFile::remove(info.filePath);
+            }
+            socket->disconnectFromHost();
+            cleanupTransfer(socket);
+            return;
+        }
+    }
 }
 
 void FileTransferManager::onNewConnection() {
@@ -371,6 +397,10 @@ void FileTransferManager::handleSocketError(QTcpSocket* socket) {
         && info.bytesTransferred >= info.fileSize;
 
     if (!info.isUpload && !alreadyReported && !isNormalRemoteClose) {
+        // 删除部分下载的文件
+        if (!info.filePath.isEmpty()) {
+            QFile::remove(info.filePath);
+        }
         emit downloadError(info.fileId, socket->errorString());
     }
 

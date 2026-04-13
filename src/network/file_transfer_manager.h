@@ -32,6 +32,7 @@ public:
     void setLocalFiles(const QMap<QString, SharedFileInfo>& files);
     void requestFile(const SharedFileInfo& fileInfo, const QString& savePath,
                      const QHostAddress& peerAddress, int peerPort);
+    void cancelDownload(const QString& fileId);
 
 signals:
     void downloadProgress(const QString& fileId, qint64 received, qint64 total);

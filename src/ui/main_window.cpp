@@ -289,6 +289,12 @@ void MainWindow::setupConnections() {
                 m_fileList->removeFile(fileId);
             });
 
+    connect(m_fileList, &FileListWidget::fileCancelRequested, this,
+            [this](const QString &fileId) {
+                m_transferManager->cancelDownload(fileId);
+                m_fileList->resetDownload(fileId);
+            });
+
     connect(m_trayIcon, &SystemTray::showWindowRequested, this, [this]() {
         show();
         raise();
@@ -525,6 +531,10 @@ void MainWindow::onDownloadComplete(const QString &fileId,
 
 void MainWindow::onDownloadError(const QString &fileId, const QString &error) {
     qWarning() << "Download error:" << fileId << error;
+
+    // 重置列表项的下载状态
+    m_fileList->resetDownload(fileId);
+
     if (error == QStringLiteral("not_found")) {
         // 远端不再持有该 fileId，清理本地失效条目避免重复点击失败
         m_fileList->removeFile(fileId);

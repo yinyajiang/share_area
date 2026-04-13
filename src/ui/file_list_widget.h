@@ -21,12 +21,15 @@ public:
     void updateProgress(qint64 received, qint64 total);
     void setLocalSavePath(const QString& path);
     void markAsDownloaded();
+    void resetDownload();
     QString fileId() const { return m_fileInfo.fileId; }
     QString deviceId() const { return m_fileInfo.deviceId; }
     bool isDownloaded() const { return !m_fileInfo.localSavePath.isEmpty(); }
+    bool isDownloading() const { return m_downloading; }
 
 signals:
     void deleteRequested(const QString& fileId);
+    void cancelRequested(const QString& fileId);
 
 private:
     SharedFileInfo m_fileInfo;
@@ -39,6 +42,7 @@ private:
     // 速度计算相关
     QElapsedTimer m_speedTimer;
     qint64 m_lastReceived = 0;
+    bool m_downloading = false;
 
     void setupUI();
     QString formatSize(qint64 bytes);
@@ -60,14 +64,17 @@ public:
     void clearRemoteFiles(const QString& deviceId);
     void updateTransferProgress(const QString& fileId, qint64 received, qint64 total);
     void updateFileSavePath(const QString& fileId, const QString& savePath);
+    void resetDownload(const QString& fileId);
 
 signals:
     void fileDownloadRequested(const SharedFileInfo& file, const QString& savePath);
     void fileDeleteRequested(const QString& fileId);
+    void fileCancelRequested(const QString& fileId);
 
 private slots:
     void onItemDoubleClicked(QListWidgetItem* item);
     void onDeleteRequested(const QString& fileId);
+    void onCancelRequested(const QString& fileId);
 
 private:
     QListWidget* m_listWidget = nullptr;
