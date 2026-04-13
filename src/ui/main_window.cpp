@@ -6,15 +6,16 @@
 #include "ui/breathing_dot.h"
 #include "ui/drop_area_widget.h"
 #include "ui/file_list_widget.h"
+#include "ui/log_window.h"
 #include "ui/setup_dialog.h"
 #include "ui/system_tray.h"
-#include "ui/log_window.h"
 
 #ifdef Q_OS_MACOS
 #include "ui/macos_blur.h"
 #endif
 #include <QApplication>
 #include <QCloseEvent>
+#include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHostInfo>
@@ -26,7 +27,6 @@
 #include <QProcess>
 #include <QRadialGradient>
 #include <QStandardPaths>
-#include <QDir>
 #include <QSvgRenderer>
 #include <QUuid>
 
@@ -229,8 +229,10 @@ void MainWindow::initialize() {
     // 设置语言菜单初始选中
     m_trayIcon->updateLanguageChecked(m_currentLanguage);
 
-    // 默认窗口置顶
-    setWindowFlag(Qt::WindowStaysOnTopHint, true);
+    // 窗口置顶
+    if (AppSettings::instance().alwaysOnTop()) {
+        setWindowFlag(Qt::WindowStaysOnTopHint, true);
+    }
     show();
 }
 
@@ -248,9 +250,11 @@ void MainWindow::startTransferService() {
     QMetaObject::invokeMethod(
         m_transferManager,
         [this, &started, &resolvedPort, filesSnapshot]() {
-            started = m_transferManager->startServer(Constants::DEFAULT_TRANSFER_PORT);
+            started = m_transferManager->startServer(
+                Constants::DEFAULT_TRANSFER_PORT);
             if (!started) {
-                qWarning() << "Failed to start transfer server on default port, trying random port";
+                qWarning() << "Failed to start transfer server on default "
+                              "port, trying random port";
                 started = m_transferManager->startServer(0);
             }
             m_transferManager->setLocalFiles(filesSnapshot);
@@ -272,17 +276,14 @@ void MainWindow::stopTransferService() {
         return;
     }
 
-    if (m_transferManager && m_transferThread && m_transferThread->isRunning()) {
-        FileTransferManager* manager = m_transferManager;
+    if (m_transferManager && m_transferThread &&
+        m_transferThread->isRunning()) {
+        FileTransferManager *manager = m_transferManager;
         QMetaObject::invokeMethod(
-            manager,
-            [manager]() {
-                manager->stopServer();
-            },
+            manager, [manager]() { manager->stopServer(); },
             Qt::BlockingQueuedConnection);
         QMetaObject::invokeMethod(
-            manager,
-            [manager]() { manager->deleteLater(); },
+            manager, [manager]() { manager->deleteLater(); },
             Qt::BlockingQueuedConnection);
         m_transferManager = nullptr;
     } else if (m_transferManager) {
@@ -323,9 +324,11 @@ void MainWindow::setupConnections() {
     connect(m_fileList, &FileListWidget::fileDownloadRequested, this,
             [this](const SharedFileInfo &file, const QString &savePath) {
                 // savePath 非空且文件已存在 → 已下载过，直接打开 Finder 定位
-                if (!file.localSavePath.isEmpty() && QFile::exists(file.localSavePath)) {
+                if (!file.localSavePath.isEmpty() &&
+                    QFile::exists(file.localSavePath)) {
 #ifdef Q_OS_MACOS
-                    QProcess::startDetached(QStringLiteral("open"),
+                    QProcess::startDetached(
+                        QStringLiteral("open"),
                         {QStringLiteral("-R"), file.localSavePath});
 #elif defined(Q_OS_WIN)
                     QProcess::startDetached(QStringLiteral("explorer"),
@@ -338,13 +341,14 @@ void MainWindow::setupConnections() {
                     if (!m_transferManager) {
                         return;
                     }
-                    FileTransferManager* manager = m_transferManager;
+                    FileTransferManager *manager = m_transferManager;
                     const QHostAddress peerAddress = it.value().first;
                     const int peerPort = it.value().second;
                     QMetaObject::invokeMethod(
                         manager,
                         [manager, file, savePath, peerAddress, peerPort]() {
-                            manager->requestFile(file, savePath, peerAddress, peerPort);
+                            manager->requestFile(file, savePath, peerAddress,
+                                                 peerPort);
                         },
                         Qt::QueuedConnection);
                 } else {
@@ -354,16 +358,14 @@ void MainWindow::setupConnections() {
             });
 
     connect(m_fileList, &FileListWidget::fileDeleteRequested, this,
-            [this](const QString &fileId) {
-                m_fileList->removeFile(fileId);
-            });
+            [this](const QString &fileId) { m_fileList->removeFile(fileId); });
 
     connect(m_fileList, &FileListWidget::fileCancelRequested, this,
             [this](const QString &fileId) {
                 if (!m_transferManager) {
                     return;
                 }
-                FileTransferManager* manager = m_transferManager;
+                FileTransferManager *manager = m_transferManager;
                 QMetaObject::invokeMethod(
                     manager,
                     [manager, fileId]() { manager->cancelDownload(fileId); },
@@ -385,6 +387,8 @@ void MainWindow::setupConnections() {
     connect(m_trayIcon, &SystemTray::alwaysOnTopChanged, this, [this](bool on) {
         setWindowFlag(Qt::WindowStaysOnTopHint, on);
         show();
+        AppSettings::instance().setAlwaysOnTop(on);
+        AppSettings::instance().save();
     });
     connect(m_trayIcon, &SystemTray::opacityChanged, this, [this](int value) {
         setWindowOpacity(value / 100.0);
@@ -541,11 +545,14 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
         m_localSharedFiles[sharedFile.fileId] = sharedFile;
 
         if (m_transferManager) {
-            FileTransferManager* manager = m_transferManager;
-            const QMap<QString, SharedFileInfo> filesSnapshot = m_localSharedFiles;
+            FileTransferManager *manager = m_transferManager;
+            const QMap<QString, SharedFileInfo> filesSnapshot =
+                m_localSharedFiles;
             QMetaObject::invokeMethod(
                 manager,
-                [manager, filesSnapshot]() { manager->setLocalFiles(filesSnapshot); },
+                [manager, filesSnapshot]() {
+                    manager->setLocalFiles(filesSnapshot);
+                },
                 Qt::QueuedConnection);
         }
         if (m_discovery)
@@ -575,8 +582,7 @@ void MainWindow::onPeerLost(const QString &deviceId) {
 }
 
 void MainWindow::onFileShared(const SharedFileInfo &file) {
-    qDebug() << "File shared:" << file.fileName
-             << "id:" << file.fileId
+    qDebug() << "File shared:" << file.fileName << "id:" << file.fileId
              << "from" << file.deviceName;
     m_fileList->addFile(file);
 
@@ -605,9 +611,10 @@ void MainWindow::onDownloadComplete(const QString &fileId,
     // 打开 Finder / 资源管理器定位到文件
 #ifdef Q_OS_MACOS
     QProcess::startDetached(QStringLiteral("open"),
-        {QStringLiteral("-R"), path});
+                            {QStringLiteral("-R"), path});
 #elif defined(Q_OS_WIN)
-    QProcess::startDetached(QStringLiteral("explorer"),
+    QProcess::startDetached(
+        QStringLiteral("explorer"),
         {QStringLiteral("/select,"), QDir::toNativeSeparators(path)});
 #endif
 
@@ -624,8 +631,9 @@ void MainWindow::onDownloadError(const QString &fileId, const QString &error) {
     if (error == QStringLiteral("not_found")) {
         // 远端不再持有该 fileId，清理本地失效条目避免重复点击失败
         m_fileList->removeFile(fileId);
-        QMessageBox::warning(this, tr("下载失败"),
-                             tr("该文件在对端已失效，请等待对方重新分享后重试。"));
+        QMessageBox::warning(
+            this, tr("下载失败"),
+            tr("该文件在对端已失效，请等待对方重新分享后重试。"));
         return;
     }
 
@@ -692,7 +700,7 @@ void MainWindow::updateOnlineCount() {
 
 void MainWindow::onDebugLogToggled(bool enabled) {
     if (enabled) {
-        auto* logWin = new LogWindow(nullptr);
+        auto *logWin = new LogWindow(nullptr);
         logWin->setAttribute(Qt::WA_DeleteOnClose);
         logWin->setWindowFlags(Qt::Window);
         logWin->show();

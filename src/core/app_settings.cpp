@@ -34,12 +34,19 @@ void AppSettings::setOpacity(int opacity) {
     m_opacity = qBound(10, opacity, 100);
 }
 
+bool AppSettings::alwaysOnTop() const { return m_alwaysOnTop; }
+
+void AppSettings::setAlwaysOnTop(bool alwaysOnTop) {
+    m_alwaysOnTop = alwaysOnTop;
+}
+
 void AppSettings::save() {
     m_settings.setValue(QStringLiteral("groupCode"), m_groupCode);
     m_settings.setValue(QStringLiteral("language"), m_language);
     m_settings.setValue(QStringLiteral("deviceName"), m_deviceName);
     m_settings.setValue(QStringLiteral("deviceId"), m_deviceId);
     m_settings.setValue(QStringLiteral("opacity"), m_opacity);
+    m_settings.setValue(QStringLiteral("alwaysOnTop"), m_alwaysOnTop);
 }
 
 void AppSettings::load() {
@@ -58,4 +65,7 @@ void AppSettings::load() {
 
     m_opacity = m_settings.value(QStringLiteral("opacity"), 100).toInt();
     m_opacity = qBound(10, m_opacity, 100);
+
+    m_alwaysOnTop =
+        m_settings.value(QStringLiteral("alwaysOnTop"), true).toBool();
 }

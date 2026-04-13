@@ -6,28 +6,31 @@
 class AppSettings : public QObject {
     Q_OBJECT
 
-public:
-    static AppSettings& instance();
+  public:
+    static AppSettings &instance();
 
     QString groupCode() const;
-    void setGroupCode(const QString& code);
+    void setGroupCode(const QString &code);
     bool hasGroupCode() const;
 
     QString language() const;
-    void setLanguage(const QString& lang);
+    void setLanguage(const QString &lang);
 
     QString deviceName() const;
-    void setDeviceName(const QString& name);
+    void setDeviceName(const QString &name);
 
     QString deviceId() const;
 
     int opacity() const;
-    void setOpacity(int opacity);   // 10-100
+    void setOpacity(int opacity); // 10-100
+
+    bool alwaysOnTop() const;
+    void setAlwaysOnTop(bool alwaysOnTop);
 
     void save();
     void load();
 
-private:
+  private:
     AppSettings();
     ~AppSettings() = default;
 
@@ -37,4 +40,5 @@ private:
     QString m_deviceName;
     QString m_deviceId;
     int m_opacity = 92;
+    bool m_alwaysOnTop = true;
 };
