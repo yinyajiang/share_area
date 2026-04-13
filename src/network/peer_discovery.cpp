@@ -117,7 +117,10 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
         if (deviceId == m_deviceId) return;
 
         qint64 now = QDateTime::currentMSecsSinceEpoch();
-        if (!m_peers.contains(deviceId)) {
+        bool isNewPeer = !m_peers.contains(deviceId);
+        bool portChanged = false;
+
+        if (isNewPeer) {
             PeerInfo info;
             info.deviceId = deviceId;
             info.deviceName = deviceName;
@@ -125,13 +128,17 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
             info.transferPort = transferPort;
             info.lastSeen = now;
             m_peers[deviceId] = info;
-
-            emit peerFound(deviceId, deviceName, sender, transferPort);
         } else {
+            portChanged = m_peers[deviceId].transferPort != transferPort;
             m_peers[deviceId].deviceName = deviceName;
             m_peers[deviceId].lastSeen = now;
             m_peers[deviceId].address = sender;
             m_peers[deviceId].transferPort = transferPort;
+        }
+
+        // 新设备或端口变更时通知上层
+        if (isNewPeer || portChanged) {
+            emit peerFound(deviceId, deviceName, sender, transferPort);
         }
 
     } else if (type == QStringLiteral("GOODBYE")) {

@@ -216,9 +216,7 @@ void MainWindow::initialize() {
     // 恢复保存的窗口透明度
     setWindowOpacity(AppSettings::instance().opacity() / 100.0);
 
-    m_discovery = new PeerDiscovery(groupCode, this);
-    m_discovery->start();
-
+    // 先启动文件传输服务器，获取端口号
     m_transferManager = new FileTransferManager(this);
     if (!m_transferManager->startServer(Constants::DEFAULT_TRANSFER_PORT)) {
         qWarning() << "Failed to start transfer server on default port, trying "
@@ -226,7 +224,12 @@ void MainWindow::initialize() {
         m_transferManager->startServer(0);
     }
     m_transferManager->setLocalFiles(m_localSharedFiles);
+
+    // 再启动设备发现，确保广播时已携带正确端口
+    m_discovery = new PeerDiscovery(groupCode, this);
     m_discovery->setTransferPort(m_transferManager->transferPort());
+    m_discovery->start();
+
     setupConnections();
 
     // 设置语言菜单初始选中
@@ -466,9 +469,10 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
 
 void MainWindow::onPeerFound(const QString &deviceId, const QString &deviceName,
                              const QHostAddress &addr, int port) {
+    bool isNew = !m_peerTransferPorts.contains(deviceId);
     qDebug() << "Peer found:" << deviceName << addr.toString() << port;
     m_peerTransferPorts[deviceId] = qMakePair(addr, port);
-    if (m_trayIcon)
+    if (isNew && m_trayIcon)
         m_trayIcon->showMessage(tr("设备上线"),
                                 tr("%1 已加入分享组").arg(deviceName));
     updateOnlineCount();

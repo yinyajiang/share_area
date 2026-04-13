@@ -60,7 +60,7 @@
     <name>MainWindow</name>
     <message numerus="yes">
         <location filename="../src/ui/main_window.cpp" line="124"/>
-        <location filename="../src/ui/main_window.cpp" line="580"/>
+        <location filename="../src/ui/main_window.cpp" line="584"/>
         <source>%n 在线</source>
         <translation>
             <numerusform>%n online</numerusform>
@@ -69,43 +69,43 @@
     </message>
     <message>
         <location filename="../src/ui/main_window.cpp" line="134"/>
-        <location filename="../src/ui/main_window.cpp" line="572"/>
+        <location filename="../src/ui/main_window.cpp" line="576"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
     <message>
         <location filename="../src/ui/main_window.cpp" line="175"/>
-        <location filename="../src/ui/main_window.cpp" line="571"/>
+        <location filename="../src/ui/main_window.cpp" line="575"/>
         <source>其他设备分享的文件</source>
         <translation>Files shared by other devices</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="472"/>
+        <location filename="../src/ui/main_window.cpp" line="476"/>
         <source>设备上线</source>
         <translation>Device Online</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="473"/>
+        <location filename="../src/ui/main_window.cpp" line="477"/>
         <source>%1 已加入分享组</source>
         <translation>%1 has joined the sharing group</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="514"/>
+        <location filename="../src/ui/main_window.cpp" line="518"/>
         <source>下载完成</source>
         <translation>Download Complete</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="514"/>
+        <location filename="../src/ui/main_window.cpp" line="518"/>
         <source>文件已成功下载</source>
         <translation>File downloaded successfully</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="519"/>
+        <location filename="../src/ui/main_window.cpp" line="523"/>
         <source>下载失败</source>
         <translation>Download Failed</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="520"/>
+        <location filename="../src/ui/main_window.cpp" line="524"/>
         <source>无法下载文件：%1</source>
         <translation>Failed to download file: %1</translation>
     </message>
