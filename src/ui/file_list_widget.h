@@ -6,6 +6,7 @@
 #include <QVBoxLayout>
 #include <QMap>
 #include <QProgressBar>
+#include <QEnterEvent>
 #include <QElapsedTimer>
 #include "core/shared_file.h"
 
@@ -46,6 +47,10 @@ private:
 
     void setupUI();
     QString formatSize(qint64 bytes);
+
+protected:
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 };
 
 /**

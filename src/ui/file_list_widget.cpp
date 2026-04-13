@@ -205,6 +205,18 @@ void FileListItemWidget::resetDownload() {
     m_infoLabel->setText(infoText);
 }
 
+void FileListItemWidget::enterEvent(QEnterEvent* event) {
+    Q_UNUSED(event);
+    m_deleteButton->show();
+}
+
+void FileListItemWidget::leaveEvent(QEvent* event) {
+    Q_UNUSED(event);
+    if (!m_downloading) {
+        m_deleteButton->hide();
+    }
+}
+
 QString FileListItemWidget::formatSize(qint64 bytes) {
     const qint64 KB = 1024;
     const qint64 MB = KB * 1024;

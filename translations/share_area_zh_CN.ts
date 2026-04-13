@@ -49,8 +49,8 @@
 <context>
     <name>FileListWidget</name>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="244"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="477"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="256"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="489"/>
         <source>暂无远程文件</source>
         <translation>暂无远程文件</translation>
     </message>
