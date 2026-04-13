@@ -145,8 +145,8 @@ void FileListItemWidget::updateProgress(qint64 received, qint64 total) {
                     qint64 bytesDelta = received - m_lastReceived;
                     double speed = bytesDelta / (elapsedMs / 1000.0);  // bytes/sec
 
-                    // 每 500ms 更新一次速度显示，避免抖动
-                    if (elapsedMs >= 500) {
+                    // 每 1s 更新一次速度显示
+                    if (elapsedMs >= 1000) {
                         m_lastReceived = received;
                         m_speedTimer.restart();
                     }
