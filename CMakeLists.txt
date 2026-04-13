@@ -35,6 +35,7 @@ set(SOURCES
     src/ui/setup_dialog.cpp
     src/ui/system_tray.cpp
     src/ui/app_icon.cpp
+    src/ui/log_window.cpp
 )
 
 # macOS 原生毛玻璃支持
@@ -55,6 +56,7 @@ set(HEADERS
     src/ui/setup_dialog.h
     src/ui/system_tray.h
     src/ui/app_icon.h
+    src/ui/log_window.h
 )
 
 # Translation files

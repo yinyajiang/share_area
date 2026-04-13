@@ -51,6 +51,7 @@ class MainWindow : public QMainWindow {
                             qint64 total);
     void onDownloadComplete(const QString &fileId, const QString &path);
     void onDownloadError(const QString &fileId, const QString &error);
+    void onDebugLogToggled(bool enabled);
     void onChangeLanguage(const QString &lang);
     void onChangeCode();
 

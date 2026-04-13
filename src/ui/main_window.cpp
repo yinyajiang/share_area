@@ -8,6 +8,7 @@
 #include "ui/file_list_widget.h"
 #include "ui/setup_dialog.h"
 #include "ui/system_tray.h"
+#include "ui/log_window.h"
 
 #ifdef Q_OS_MACOS
 #include "ui/macos_blur.h"
@@ -297,6 +298,8 @@ void MainWindow::setupConnections() {
             &MainWindow::onChangeLanguage);
     connect(m_trayIcon, &SystemTray::changeCodeRequested, this,
             &MainWindow::onChangeCode);
+    connect(m_trayIcon, &SystemTray::debugLogToggled, this,
+            &MainWindow::onDebugLogToggled);
     connect(m_trayIcon, &SystemTray::alwaysOnTopChanged, this, [this](bool on) {
         setWindowFlag(Qt::WindowStaysOnTopHint, on);
         show();
@@ -583,4 +586,14 @@ void MainWindow::updateOnlineCount() {
     int count = m_peerTransferPorts.size();
     m_onlineLabel->setText(tr("%n 在线", nullptr, count));
     m_breathingDot->setActive(count > 0);
+}
+
+void MainWindow::onDebugLogToggled(bool enabled) {
+    if (enabled) {
+        auto* logWin = new LogWindow(nullptr);
+        logWin->setAttribute(Qt::WA_DeleteOnClose);
+        logWin->setWindowFlags(Qt::Window);
+        logWin->show();
+    }
+    // LogWindow 析构时自动恢复消息处理器
 }

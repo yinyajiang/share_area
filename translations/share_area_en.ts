@@ -57,10 +57,28 @@
     </message>
 </context>
 <context>
+    <name>LogWindow</name>
+    <message>
+        <location filename="../src/ui/log_window.cpp" line="33"/>
+        <source>调试日志</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/log_window.cpp" line="60"/>
+        <source>复制全部</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/log_window.cpp" line="75"/>
+        <source>清空</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message numerus="yes">
-        <location filename="../src/ui/main_window.cpp" line="124"/>
-        <location filename="../src/ui/main_window.cpp" line="584"/>
+        <location filename="../src/ui/main_window.cpp" line="125"/>
+        <location filename="../src/ui/main_window.cpp" line="587"/>
         <source>%n 在线</source>
         <translation>
             <numerusform>%n online</numerusform>
@@ -68,44 +86,44 @@
         </translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="134"/>
-        <location filename="../src/ui/main_window.cpp" line="576"/>
+        <location filename="../src/ui/main_window.cpp" line="135"/>
+        <location filename="../src/ui/main_window.cpp" line="579"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="175"/>
-        <location filename="../src/ui/main_window.cpp" line="575"/>
+        <location filename="../src/ui/main_window.cpp" line="176"/>
+        <location filename="../src/ui/main_window.cpp" line="578"/>
         <source>其他设备分享的文件</source>
         <translation>Files shared by other devices</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="476"/>
+        <location filename="../src/ui/main_window.cpp" line="479"/>
         <source>设备上线</source>
         <translation>Device Online</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="477"/>
+        <location filename="../src/ui/main_window.cpp" line="480"/>
         <source>%1 已加入分享组</source>
         <translation>%1 has joined the sharing group</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="518"/>
+        <location filename="../src/ui/main_window.cpp" line="521"/>
         <source>下载完成</source>
         <translation>Download Complete</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="518"/>
+        <location filename="../src/ui/main_window.cpp" line="521"/>
         <source>文件已成功下载</source>
         <translation>File downloaded successfully</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="523"/>
+        <location filename="../src/ui/main_window.cpp" line="526"/>
         <source>下载失败</source>
         <translation>Download Failed</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="524"/>
+        <location filename="../src/ui/main_window.cpp" line="527"/>
         <source>无法下载文件：%1</source>
         <translation>Failed to download file: %1</translation>
     </message>
@@ -141,37 +159,43 @@
     <name>SystemTray</name>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="25"/>
-        <location filename="../src/ui/system_tray.cpp" line="129"/>
+        <location filename="../src/ui/system_tray.cpp" line="137"/>
         <source>显示主窗口</source>
         <translation>Show Window</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="30"/>
-        <location filename="../src/ui/system_tray.cpp" line="130"/>
+        <location filename="../src/ui/system_tray.cpp" line="138"/>
         <source>语言设置</source>
         <translation>Language</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="47"/>
-        <location filename="../src/ui/system_tray.cpp" line="131"/>
+        <location filename="../src/ui/system_tray.cpp" line="139"/>
         <source>更换识别码</source>
         <translation>Change Code</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="52"/>
-        <location filename="../src/ui/system_tray.cpp" line="132"/>
+        <location filename="../src/ui/system_tray.cpp" line="140"/>
+        <source>调试日志</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/system_tray.cpp" line="60"/>
+        <location filename="../src/ui/system_tray.cpp" line="141"/>
         <source>窗口置顶</source>
         <translation>Always on Top</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="60"/>
-        <location filename="../src/ui/system_tray.cpp" line="133"/>
+        <location filename="../src/ui/system_tray.cpp" line="68"/>
+        <location filename="../src/ui/system_tray.cpp" line="142"/>
         <source>透明度</source>
         <translation>Opacity</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="92"/>
-        <location filename="../src/ui/system_tray.cpp" line="134"/>
+        <location filename="../src/ui/system_tray.cpp" line="100"/>
+        <location filename="../src/ui/system_tray.cpp" line="143"/>
         <source>退出</source>
         <translation>Quit</translation>
     </message>

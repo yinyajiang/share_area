@@ -59,6 +59,10 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
                                       const QString& savePath,
                                       const QHostAddress& peerAddress,
                                       int peerPort) {
+    qDebug() << "Requesting file:" << fileInfo.fileName
+             << "from" << peerAddress.toString() << ":" << peerPort
+             << "save to:" << savePath;
+
     QTcpSocket* socket = new QTcpSocket(this);
     socket->setProxy(QNetworkProxy::NoProxy);  // 绕过系统代理
     TransferInfo info;
@@ -83,11 +87,14 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
     });
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred),
             this, [this, socket](QAbstractSocket::SocketError error) {
-        onSocketError(error);
+        Q_UNUSED(error);
+        handleSocketError(socket);
     });
 
     // 连接成功后发送文件请求
     connect(socket, &QTcpSocket::connected, this, [this, socket]() {
+        qDebug() << "Connected to peer, sending GET request for"
+                 << m_activeTransfers[socket].fileId;
         QByteArray request = QStringLiteral("GET|%1\n").arg(
             m_activeTransfers[socket].fileId).toUtf8();
         socket->write(request);
@@ -115,11 +122,17 @@ void FileTransferManager::onNewConnection() {
     });
     connect(clientSocket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred),
             this, [this, clientSocket](QAbstractSocket::SocketError error) {
-        onSocketError(error);
+        Q_UNUSED(error);
+        handleSocketError(clientSocket);
     });
 
     // 初始化空缓冲区
     m_buffers[clientSocket] = QByteArray();
+
+    // 处理在信号连接前已到达的数据
+    if (clientSocket->bytesAvailable() > 0) {
+        handleClientRequest(clientSocket);
+    }
 }
 
 void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
@@ -138,6 +151,7 @@ void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
     m_buffers[socket] = buffer.mid(newlineIndex + 1);
 
     QString requestStr = QString::fromUtf8(request).trimmed();
+    qDebug() << "Server received request:" << requestStr;
     QStringList parts = requestStr.split('|');
 
     if (parts.size() < 2 || parts[0] != QStringLiteral("GET")) {
@@ -151,7 +165,9 @@ void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
     QString fileId = parts[1];
 
     if (!m_localFiles.contains(fileId)) {
-        qWarning("File not found: %s", qUtf8Printable(fileId));
+        qWarning("File not found: %s, available files: %s",
+                 qUtf8Printable(fileId),
+                 qUtf8Printable(QStringList(m_localFiles.keys()).join(", ")));
         socket->write("ERROR|not_found\n");
         socket->flush();
         socket->disconnectFromHost();
@@ -311,8 +327,7 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
     }
 }
 
-void FileTransferManager::onSocketError(QAbstractSocket::SocketError error) {
-    QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
+void FileTransferManager::handleSocketError(QTcpSocket* socket) {
     if (!socket) return;
 
     if (!m_activeTransfers.contains(socket)) {
@@ -320,6 +335,10 @@ void FileTransferManager::onSocketError(QAbstractSocket::SocketError error) {
     }
 
     TransferInfo& info = m_activeTransfers[socket];
+
+    qDebug() << "Socket error: isUpload:" << info.isUpload
+             << "fileId:" << info.fileId
+             << "error:" << socket->errorString();
 
     if (!info.isUpload) {
         emit downloadError(info.fileId, socket->errorString());

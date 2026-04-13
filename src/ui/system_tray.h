@@ -31,6 +31,7 @@ signals:
     void showWindowRequested();
     void changeLanguageRequested(const QString& lang);
     void changeCodeRequested();
+    void debugLogToggled(bool enabled);
     void alwaysOnTopChanged(bool on);
     void opacityChanged(int opacity);
     void quitRequested();
@@ -44,6 +45,7 @@ private:
     QAction* m_chineseAction = nullptr;
     QAction* m_englishAction = nullptr;
     QAction* m_changeCodeAction = nullptr;
+    QAction* m_debugLogAction = nullptr;
     QAction* m_alwaysOnTopAction = nullptr;
     QMenu* m_opacityMenu = nullptr;
     QSlider* m_opacitySlider = nullptr;

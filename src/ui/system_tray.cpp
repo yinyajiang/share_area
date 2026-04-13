@@ -48,6 +48,14 @@ void SystemTray::setupMenu() {
     connect(m_changeCodeAction, &QAction::triggered, this,
             &SystemTray::changeCodeRequested);
 
+    // 调试日志
+    m_debugLogAction = m_contextMenu->addAction(tr("调试日志"));
+    m_debugLogAction->setCheckable(true);
+    m_debugLogAction->setChecked(false);
+    connect(m_debugLogAction, &QAction::triggered, this, [this]() {
+        emit debugLogToggled(m_debugLogAction->isChecked());
+    });
+
     // 窗口置顶
     m_alwaysOnTopAction = m_contextMenu->addAction(tr("窗口置顶"));
     m_alwaysOnTopAction->setCheckable(true);
@@ -129,6 +137,7 @@ void SystemTray::retranslateUi() {
     m_showAction->setText(tr("显示主窗口"));
     m_languageMenu->setTitle(tr("语言设置"));
     m_changeCodeAction->setText(tr("更换识别码"));
+    m_debugLogAction->setText(tr("调试日志"));
     m_alwaysOnTopAction->setText(tr("窗口置顶"));
     m_opacityMenu->setTitle(tr("透明度"));
     m_quitAction->setText(tr("退出"));

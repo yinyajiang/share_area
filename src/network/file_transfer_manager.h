@@ -42,7 +42,9 @@ signals:
 
 private slots:
     void onNewConnection();
-    void onSocketError(QAbstractSocket::SocketError error);
+
+private:
+    void handleSocketError(QTcpSocket* socket);
 
 private:
     QTcpServer* m_server;
