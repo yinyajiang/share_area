@@ -35,13 +35,13 @@ bool FileTransferManager::startServer(int preferredPort) {
 
 void FileTransferManager::stopServer() {
     // 关闭所有活跃传输
-    for (auto it = m_activeTransfers.begin(); it != m_activeTransfers.end(); ++it) {
-        QTcpSocket* socket = it.key();
-        socket->disconnectFromHost();
-        socket->deleteLater();
+    const QList<QTcpSocket*> sockets = m_activeTransfers.keys();
+    for (QTcpSocket* socket : sockets) {
+        if (socket) {
+            socket->disconnectFromHost();
+            cleanupTransfer(socket);
+        }
     }
-    m_activeTransfers.clear();
-    m_buffers.clear();
 
     m_server->close();
     m_transferPort = 0;
@@ -60,6 +60,7 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
                                       const QHostAddress& peerAddress,
                                       int peerPort) {
     qDebug() << "Requesting file:" << fileInfo.fileName
+             << "id:" << fileInfo.fileId
              << "from" << peerAddress.toString() << ":" << peerPort
              << "save to:" << savePath;
 
@@ -69,7 +70,8 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
     info.fileId = fileInfo.fileId;
     info.fileName = fileInfo.fileName;
     info.filePath = savePath;
-    info.fileSize = fileInfo.fileSize;
+    // fileSize 由远端响应头的 OK|size 提供，避免跳过响应头解析
+    info.fileSize = 0;
     info.bytesTransferred = 0;
     info.isUpload = false;
     info.socket = socket;
@@ -79,7 +81,10 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
 
     // 连接信号
     connect(socket, &QTcpSocket::readyRead, this, [this, socket]() {
-        if (m_activeTransfers[socket].isUpload) {
+        if (!m_activeTransfers.contains(socket)) {
+            return;
+        }
+        if (m_activeTransfers.value(socket).isUpload) {
             handleClientRequest(socket);
         } else {
             handleDownloadResponse(socket);
@@ -90,13 +95,19 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
         Q_UNUSED(error);
         handleSocketError(socket);
     });
+    connect(socket, &QTcpSocket::disconnected, this, [this, socket]() {
+        cleanupTransfer(socket);
+    });
 
     // 连接成功后发送文件请求
     connect(socket, &QTcpSocket::connected, this, [this, socket]() {
+        if (!m_activeTransfers.contains(socket)) {
+            return;
+        }
         qDebug() << "Connected to peer, sending GET request for"
-                 << m_activeTransfers[socket].fileId;
+                 << m_activeTransfers.value(socket).fileId;
         QByteArray request = QStringLiteral("GET|%1\n").arg(
-            m_activeTransfers[socket].fileId).toUtf8();
+            m_activeTransfers.value(socket).fileId).toUtf8();
         socket->write(request);
     });
 
@@ -114,7 +125,10 @@ void FileTransferManager::onNewConnection() {
     m_activeTransfers[clientSocket] = info;
 
     connect(clientSocket, &QTcpSocket::readyRead, this, [this, clientSocket]() {
-        if (m_activeTransfers[clientSocket].isUpload) {
+        if (!m_activeTransfers.contains(clientSocket)) {
+            return;
+        }
+        if (m_activeTransfers.value(clientSocket).isUpload) {
             handleClientRequest(clientSocket);
         } else {
             handleDownloadResponse(clientSocket);
@@ -124,6 +138,9 @@ void FileTransferManager::onNewConnection() {
             this, [this, clientSocket](QAbstractSocket::SocketError error) {
         Q_UNUSED(error);
         handleSocketError(clientSocket);
+    });
+    connect(clientSocket, &QTcpSocket::disconnected, this, [this, clientSocket]() {
+        cleanupTransfer(clientSocket);
     });
 
     // 初始化空缓冲区
@@ -258,6 +275,12 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
     }
 
     TransferInfo& info = m_activeTransfers[socket];
+    auto reportDownloadError = [this, socket, &info](const QString& error) {
+        socket->setProperty("download_error_reported", true);
+        emit downloadError(info.fileId, error);
+        socket->disconnectFromHost();
+    };
+
     QByteArray data = socket->readAll();
     m_buffers[socket].append(data);
 
@@ -275,22 +298,19 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
         QStringList parts = headerStr.split('|');
 
         if (parts.size() < 2) {
-            emit downloadError(info.fileId, QStringLiteral("Invalid response header"));
-            socket->disconnectFromHost();
+            reportDownloadError(QStringLiteral("Invalid response header"));
             return;
         }
 
         QString status = parts[0];
         if (status == QStringLiteral("ERROR")) {
             QString error = parts.size() > 1 ? parts[1] : QStringLiteral("Unknown error");
-            emit downloadError(info.fileId, error);
-            socket->disconnectFromHost();
+            reportDownloadError(error);
             return;
         }
 
         if (status != QStringLiteral("OK")) {
-            emit downloadError(info.fileId, QStringLiteral("Unexpected response"));
-            socket->disconnectFromHost();
+            reportDownloadError(QStringLiteral("Unexpected response"));
             return;
         }
 
@@ -305,8 +325,7 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
 
         QFile* file = new QFile(info.filePath, this);
         if (!file->open(QIODevice::WriteOnly)) {
-            emit downloadError(info.fileId, QStringLiteral("Failed to create local file"));
-            socket->disconnectFromHost();
+            reportDownloadError(QStringLiteral("Failed to create local file"));
             file->deleteLater();
             return;
         }
@@ -345,18 +364,39 @@ void FileTransferManager::handleSocketError(QTcpSocket* socket) {
              << "fileId:" << info.fileId
              << "error:" << socket->errorString();
 
-    if (!info.isUpload) {
+    const bool alreadyReported = socket->property("download_error_reported").toBool();
+    const bool isNormalRemoteClose =
+        socket->error() == QAbstractSocket::RemoteHostClosedError
+        && info.fileSize > 0
+        && info.bytesTransferred >= info.fileSize;
+
+    if (!info.isUpload && !alreadyReported && !isNormalRemoteClose) {
         emit downloadError(info.fileId, socket->errorString());
     }
 
-    // 清理资源
-    QFile* file = socket->property("file").value<QFile*>();
-    if (file) {
-        file->close();
-        file->deleteLater();
+    cleanupTransfer(socket);
+}
+
+void FileTransferManager::cleanupTransfer(QTcpSocket* socket) {
+    if (!socket) {
+        return;
     }
+    if (socket->property("transfer_cleaned").toBool()) {
+        return;
+    }
+    socket->setProperty("transfer_cleaned", true);
 
     m_activeTransfers.remove(socket);
     m_buffers.remove(socket);
+
+    QFile* file = socket->property("file").value<QFile*>();
+    if (file) {
+        if (file->isOpen()) {
+            file->close();
+        }
+        file->deleteLater();
+        socket->setProperty("file", QVariant());
+    }
+
     socket->deleteLater();
 }

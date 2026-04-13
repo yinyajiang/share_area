@@ -45,6 +45,7 @@ private slots:
 
 private:
     void handleSocketError(QTcpSocket* socket);
+    void cleanupTransfer(QTcpSocket* socket);
 
 private:
     QTcpServer* m_server;

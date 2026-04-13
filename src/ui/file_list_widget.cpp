@@ -5,6 +5,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QIcon>
+#include <QDebug>
 
 // ==================== FileListItemWidget ====================
 
@@ -211,6 +212,23 @@ void FileListWidget::addFile(const SharedFileInfo& file) {
     // 检查是否已存在
     if (m_items.contains(file.fileId)) {
         return;
+    }
+
+    // 同一设备重复分享同名同大小文件时，替换旧 fileId，避免点击到失效条目
+    QStringList staleIds;
+    for (auto it = m_fileInfos.cbegin(); it != m_fileInfos.cend(); ++it) {
+        const SharedFileInfo& existing = it.value();
+        if (existing.deviceId == file.deviceId
+            && existing.fileName == file.fileName
+            && existing.fileSize == file.fileSize
+            && existing.fileId != file.fileId) {
+            staleIds.append(it.key());
+        }
+    }
+    for (const QString& staleId : staleIds) {
+        qDebug() << "Replacing stale fileId:" << staleId << "with" << file.fileId
+                 << "for file:" << file.fileName;
+        removeFile(staleId, file.deviceId);
     }
 
     // 创建列表项

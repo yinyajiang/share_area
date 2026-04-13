@@ -489,7 +489,9 @@ void MainWindow::onPeerLost(const QString &deviceId) {
 }
 
 void MainWindow::onFileShared(const SharedFileInfo &file) {
-    qDebug() << "File shared:" << file.fileName << "from" << file.deviceName;
+    qDebug() << "File shared:" << file.fileName
+             << "id:" << file.fileId
+             << "from" << file.deviceName;
     m_fileList->addFile(file);
 }
 
@@ -523,6 +525,14 @@ void MainWindow::onDownloadComplete(const QString &fileId,
 
 void MainWindow::onDownloadError(const QString &fileId, const QString &error) {
     qWarning() << "Download error:" << fileId << error;
+    if (error == QStringLiteral("not_found")) {
+        // 远端不再持有该 fileId，清理本地失效条目避免重复点击失败
+        m_fileList->removeFile(fileId);
+        QMessageBox::warning(this, tr("下载失败"),
+                             tr("该文件在对端已失效，请等待对方重新分享后重试。"));
+        return;
+    }
+
     QMessageBox::warning(this, tr("下载失败"),
                          tr("无法下载文件：%1").arg(error));
 }
