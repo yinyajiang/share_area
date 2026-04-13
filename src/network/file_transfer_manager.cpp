@@ -2,6 +2,7 @@
 #include <QTcpSocket>
 #include <QFile>
 #include <QDir>
+#include <QNetworkProxy>
 
 FileTransferManager::FileTransferManager(QObject* parent)
     : QObject(parent)
@@ -59,8 +60,7 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
                                       const QHostAddress& peerAddress,
                                       int peerPort) {
     QTcpSocket* socket = new QTcpSocket(this);
-
-    // 设置传输信息
+    socket->setProxy(QNetworkProxy::NoProxy);  // 绕过系统代理
     TransferInfo info;
     info.fileId = fileInfo.fileId;
     info.fileName = fileInfo.fileName;

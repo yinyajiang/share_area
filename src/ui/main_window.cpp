@@ -226,6 +226,7 @@ void MainWindow::initialize() {
         m_transferManager->startServer(0);
     }
     m_transferManager->setLocalFiles(m_localSharedFiles);
+    m_discovery->setTransferPort(m_transferManager->transferPort());
     setupConnections();
 
     // 设置语言菜单初始选中
