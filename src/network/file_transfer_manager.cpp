@@ -452,11 +452,15 @@ void FileTransferManager::sendDirFileChunk(QTcpSocket* socket) {
 
         // 需要开始下一个文件
         if (info.completedFiles >= info.totalFiles) {
-            // 所有文件完成
-            socket->setProperty("upload_finished", true);
-            emit uploadComplete(info.fileId);
-            socket->flush();
-            socket->disconnectFromHost();
+            // 所有文件完成，检查是否所有数据都已发送
+            if (socket->bytesToWrite() == 0) {
+                // 所有数据都已发送完成
+                socket->setProperty("upload_finished", true);
+                emit uploadComplete(info.fileId);
+                socket->disconnectFromHost();
+                return;
+            }
+            // 还有数据在发送中，等待 bytesWritten 信号再次触发
             return;
         }
 
@@ -860,7 +864,7 @@ void FileTransferManager::handleDirDownloadResponse(QTcpSocket* socket) {
                 emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
             }
             emit downloadComplete(info.fileId, info.folderRootPath);
-            socket->disconnectFromHost();
+            // 不主动断开连接，等待发送方断开
         }
     }
 }
@@ -876,6 +880,11 @@ void FileTransferManager::handleSocketError(QTcpSocket* socket) {
 
     qDebug() << "Socket error: isUpload:" << info.isUpload
              << "fileId:" << info.fileId
+             << "isDirectory:" << info.isDirectory
+             << "fileSize:" << info.fileSize
+             << "bytesTransferred:" << info.bytesTransferred
+             << "completedFiles:" << info.completedFiles
+             << "/" << info.totalFiles
              << "error:" << socket->errorString();
 
     const bool alreadyReported = socket->property("download_error_reported").toBool();
@@ -887,8 +896,10 @@ void FileTransferManager::handleSocketError(QTcpSocket* socket) {
     if (!info.isUpload && !alreadyReported && !isNormalRemoteClose) {
         // 删除部分下载的文件或文件夹
         if (info.isDirectory && !info.folderRootPath.isEmpty()) {
+            qDebug() << "Cleaning up incomplete directory download:" << info.folderRootPath;
             QDir(info.folderRootPath).removeRecursively();
         } else if (!info.filePath.isEmpty()) {
+            qDebug() << "Cleaning up incomplete file download:" << info.filePath;
             QFile::remove(info.filePath);
         }
         emit downloadError(info.fileId, socket->errorString());

@@ -555,8 +555,17 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
                 fileCount++;
             }
 
+            // Get directory name using QDir::dirName() instead of QFileInfo::fileName()
+            QString dirName = QDir(filePath).dirName();
+            if (dirName.isEmpty()) {
+                dirName = fileInfo.fileName();
+            }
+            if (dirName.isEmpty()) {
+                dirName = QStringLiteral("folder");
+            }
+
             SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
-                fileInfo.fileName(), filePath, totalSize, deviceName,
+                dirName, filePath, totalSize, deviceName,
                 deviceName);
             sharedFile.isDirectory = true;
             sharedFile.fileCount = fileCount;
