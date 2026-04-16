@@ -18,6 +18,16 @@ struct TransferInfo {
     bool isUpload = false;
     bool headerParsed = false;  // download response header parsed
     QTcpSocket* socket = nullptr;
+
+    // Directory transfer fields
+    bool isDirectory = false;
+    int totalFiles = 0;
+    int completedFiles = 0;
+    QStringList pendingRelativePaths;  // upload: files to send
+    QString folderRootPath;            // upload: source root; download: dest root
+    QString currentRelativePath;       // download: current file's relative path
+    qint64 currentFileSize = 0;        // download: current file's size
+    qint64 currentFileTransferred = 0; // download: bytes received for current file
 };
 
 class FileTransferManager : public QObject {
@@ -62,4 +72,10 @@ private:
     void handleClientRequest(QTcpSocket* socket);
     void handleDownloadResponse(QTcpSocket* socket);
     void sendFileChunk(QTcpSocket* socket);
+
+    // Directory transfer helpers
+    void handleDirClientRequest(QTcpSocket* socket, const QString& fileId);
+    void sendDirFileChunk(QTcpSocket* socket);
+    void handleDirDownloadResponse(QTcpSocket* socket);
+    static QStringList enumerateDirFiles(const QString& rootPath);
 };

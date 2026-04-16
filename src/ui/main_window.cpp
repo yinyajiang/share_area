@@ -16,6 +16,7 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDir>
+#include <QDirIterator>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHostInfo>
@@ -536,30 +537,71 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
     for (const QUrl &url : urls) {
         QString filePath = url.toLocalFile();
         QFileInfo fileInfo(filePath);
-        if (!fileInfo.exists() || !fileInfo.isFile())
+        if (!fileInfo.exists())
             continue;
 
-        SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
-            fileInfo.fileName(), filePath, fileInfo.size(), deviceName,
-            deviceName);
-        m_localSharedFiles[sharedFile.fileId] = sharedFile;
+        if (fileInfo.isDir()) {
+            // Recursively enumerate files in the directory
+            qint64 totalSize = 0;
+            int fileCount = 0;
+            QDirIterator it(filePath, QDir::Files | QDir::NoDotAndDotDot,
+                            QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                it.next();
+                QFileInfo fi(it.fileInfo());
+                // Skip symlinks to avoid infinite loops
+                if (fi.isSymLink()) continue;
+                totalSize += fi.size();
+                fileCount++;
+            }
 
-        if (m_transferManager) {
-            FileTransferManager *manager = m_transferManager;
-            const QMap<QString, SharedFileInfo> filesSnapshot =
-                m_localSharedFiles;
-            QMetaObject::invokeMethod(
-                manager,
-                [manager, filesSnapshot]() {
-                    manager->setLocalFiles(filesSnapshot);
-                },
-                Qt::QueuedConnection);
+            SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
+                fileInfo.fileName(), filePath, totalSize, deviceName,
+                deviceName);
+            sharedFile.isDirectory = true;
+            sharedFile.fileCount = fileCount;
+            m_localSharedFiles[sharedFile.fileId] = sharedFile;
+
+            if (m_transferManager) {
+                FileTransferManager *manager = m_transferManager;
+                const QMap<QString, SharedFileInfo> filesSnapshot =
+                    m_localSharedFiles;
+                QMetaObject::invokeMethod(
+                    manager,
+                    [manager, filesSnapshot]() {
+                        manager->setLocalFiles(filesSnapshot);
+                    },
+                    Qt::QueuedConnection);
+            }
+            if (m_discovery)
+                m_discovery->announceFile(sharedFile);
+
+            qDebug() << "Shared directory:" << sharedFile.fileName
+                     << "files:" << fileCount
+                     << "ID:" << sharedFile.fileId;
+        } else {
+            SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
+                fileInfo.fileName(), filePath, fileInfo.size(), deviceName,
+                deviceName);
+            m_localSharedFiles[sharedFile.fileId] = sharedFile;
+
+            if (m_transferManager) {
+                FileTransferManager *manager = m_transferManager;
+                const QMap<QString, SharedFileInfo> filesSnapshot =
+                    m_localSharedFiles;
+                QMetaObject::invokeMethod(
+                    manager,
+                    [manager, filesSnapshot]() {
+                        manager->setLocalFiles(filesSnapshot);
+                    },
+                    Qt::QueuedConnection);
+            }
+            if (m_discovery)
+                m_discovery->announceFile(sharedFile);
+
+            qDebug() << "Shared file:" << sharedFile.fileName
+                     << "ID:" << sharedFile.fileId;
         }
-        if (m_discovery)
-            m_discovery->announceFile(sharedFile);
-
-        qDebug() << "Shared file:" << sharedFile.fileName
-                 << "ID:" << sharedFile.fileId;
     }
 }
 

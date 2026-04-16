@@ -32,13 +32,18 @@ void FileListItemWidget::setupUI() {
     m_nameLabel->setStyleSheet(QStringLiteral("QLabel { color: #292524; }"));
     infoLayout->addWidget(m_nameLabel);
 
-    // 信息行（大小 + 来源）
+    // 信息行（大小/文件数 + 来源）
     m_infoLabel = new QLabel(this);
     QFont infoFont = m_infoLabel->font();
     infoFont.setPointSize(10);
     m_infoLabel->setFont(infoFont);
     m_infoLabel->setStyleSheet(QStringLiteral("QLabel { color: #78716c; }"));
-    QString infoText = tr("%1 · 来自 %2").arg(formatSize(m_fileInfo.fileSize), m_fileInfo.deviceName);
+    QString infoText;
+    if (m_fileInfo.isDirectory) {
+        infoText = tr("%1 个文件 · 来自 %2").arg(m_fileInfo.fileCount).arg(m_fileInfo.deviceName);
+    } else {
+        infoText = tr("%1 · 来自 %2").arg(formatSize(m_fileInfo.fileSize), m_fileInfo.deviceName);
+    }
     m_infoLabel->setText(infoText);
     infoLayout->addWidget(m_infoLabel);
 
@@ -456,7 +461,7 @@ void FileListWidget::onItemDoubleClicked(QListWidgetItem* item) {
     QString savePath = downloadDir + QLatin1Char('/') + it.value().fileName;
 
     // 避免文件名冲突
-    if (QFile::exists(savePath)) {
+    if (QFile::exists(savePath) || QDir(savePath).exists()) {
         savePath = downloadDir + QLatin1Char('/')
                    + it.value().fileId + QLatin1Char('_') + it.value().fileName;
     }

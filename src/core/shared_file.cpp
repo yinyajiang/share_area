@@ -3,8 +3,8 @@
 #include <QFile>
 
 QByteArray SharedFileInfo::toBroadcastData() const {
-    // Format: FILE_ADD|groupCode|deviceName|fileId|fileName|fileSize
-    // Note: groupCode is added by PeerDiscovery, here we return the rest
+    // Format: deviceName|fileId|fileName|fileSize|isDir|fileCount
+    // Note: groupCode is added by PeerDiscovery as prefix
     QByteArray data;
     data.append(deviceName.toUtf8());
     data.append('|');
@@ -13,6 +13,10 @@ QByteArray SharedFileInfo::toBroadcastData() const {
     data.append(fileName.toUtf8());
     data.append('|');
     data.append(QByteArray::number(fileSize));
+    data.append('|');
+    data.append(isDirectory ? '1' : '0');
+    data.append('|');
+    data.append(QByteArray::number(fileCount));
     return data;
 }
 
@@ -25,6 +29,11 @@ SharedFileInfo SharedFileInfo::fromBroadcastData(const QByteArray& data) {
         info.fileName = QString::fromUtf8(parts[2]);
         info.fileSize = parts[3].toLongLong();
         info.isLocal = false;
+        // Parse optional isDir and fileCount (backward compatible)
+        if (parts.size() >= 6) {
+            info.isDirectory = (parts[4] == "1");
+            info.fileCount = parts[5].toInt();
+        }
     }
     return info;
 }

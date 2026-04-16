@@ -13,6 +13,8 @@ struct SharedFileInfo {
     QString deviceId;
     QString deviceName;
     bool isLocal = false;
+    bool isDirectory = false;
+    int fileCount = 0;      // number of files in directory
 
     // For serialization in protocol
     QByteArray toBroadcastData() const;

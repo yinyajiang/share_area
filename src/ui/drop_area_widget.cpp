@@ -35,7 +35,7 @@ void DropAreaWidget::setupUI() {
     layout->addSpacing(-4);
 
     // 提示文字
-    m_hintLabel = new QLabel(tr("拖拽文件到此处分享"), this);
+    m_hintLabel = new QLabel(tr("拖拽文件或文件夹到此处分享"), this);
     m_hintLabel->setAlignment(Qt::AlignCenter);
     QFont font = m_hintLabel->font();
     font.setPointSize(13);
@@ -54,7 +54,7 @@ void DropAreaWidget::setupUI() {
 }
 
 void DropAreaWidget::retranslateUi() {
-    m_hintLabel->setText(tr("拖拽文件到此处分享"));
+    m_hintLabel->setText(tr("拖拽文件或文件夹到此处分享"));
     m_subHintLabel->setText(tr("双击分享剪贴板"));
 }
 

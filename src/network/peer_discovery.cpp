@@ -154,7 +154,7 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
         }
 
     } else if (type == QStringLiteral("FILE_ADD")) {
-        // FILE_ADD|groupCode|deviceId|deviceName|fileId|fileName|fileSize
+        // FILE_ADD|groupCode|deviceId|deviceName|fileId|fileName|fileSize|isDir|fileCount
         if (parts.size() < 7) return;
 
         QString deviceId = parts[2];
@@ -172,6 +172,12 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
         info.deviceId = deviceId;
         info.deviceName = deviceName;
         info.isLocal = false;
+
+        // Parse optional isDir and fileCount (backward compatible)
+        if (parts.size() >= 9) {
+            info.isDirectory = (parts[7] == QStringLiteral("1"));
+            info.fileCount = parts[8].toInt();
+        }
 
         emit fileShared(info);
 
@@ -208,13 +214,15 @@ void PeerDiscovery::checkPeerTimeouts() {
 void PeerDiscovery::announceFile(const SharedFileInfo& file) {
     m_localFiles[file.fileId] = file;
 
-    QByteArray message = QStringLiteral("FILE_ADD|%1|%2|%3|%4|%5|%6")
+    QByteArray message = QStringLiteral("FILE_ADD|%1|%2|%3|%4|%5|%6|%7|%8")
         .arg(m_groupCode)
         .arg(m_deviceId)
         .arg(m_deviceName.isEmpty() ? AppSettings::instance().deviceName() : m_deviceName)
         .arg(file.fileId)
         .arg(file.fileName)
         .arg(file.fileSize)
+        .arg(file.isDirectory ? 1 : 0)
+        .arg(file.fileCount)
         .toUtf8();
 
     sendMessage(message);
