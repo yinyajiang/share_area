@@ -352,6 +352,7 @@ void FileTransferManager::handleDirClientRequest(QTcpSocket* socket, const QStri
     // 发送目录响应头: OK_DIR|fileCount|totalSize\n
     QByteArray header = QStringLiteral("OK_DIR|%1|%2\n").arg(fileCount).arg(totalSize).toUtf8();
     socket->write(header);
+    socket->flush();  // 确保响应头被发送
 
     // 设置上传传输信息
     TransferInfo info;
@@ -396,7 +397,7 @@ void FileTransferManager::sendDirFileChunk(QTcpSocket* socket) {
     TransferInfo& info = m_activeTransfers[socket];
 
     while (socket->bytesToWrite() < kSocketBufferSize) {
-        // 检查是否有待发送的块
+        // 首先检查是否有待发送的块
         QByteArray& pendingChunk = m_pendingUploadChunks[socket];
         if (!pendingChunk.isEmpty()) {
             const qint64 pendingWritten = socket->write(pendingChunk);
@@ -412,12 +413,13 @@ void FileTransferManager::sendDirFileChunk(QTcpSocket* socket) {
             if (shouldReportProgress(info)) {
                 emit uploadProgress(info.fileId, info.bytesTransferred, info.fileSize);
             }
+            // 继续发送更多数据
             continue;
         }
 
-        // 检查当前文件是否已完成
         QFile* currentFile = socket->property("file").value<QFile*>();
         if (currentFile && currentFile->isOpen()) {
+            // 正在发送当前文件的数据
             QByteArray chunk = currentFile->read(Constants::TRANSFER_CHUNK_SIZE);
             if (chunk.isEmpty()) {
                 if (currentFile->atEnd()) {
@@ -427,43 +429,48 @@ void FileTransferManager::sendDirFileChunk(QTcpSocket* socket) {
                     socket->setProperty("file", QVariant());
                     info.completedFiles++;
                     qDebug() << "Directory file" << info.completedFiles << "/" << info.totalFiles << "completed";
-                    // 继续下一个文件
+                    // 文件完成，继续循环以开始下一个文件
+                    continue;
                 } else {
                     qWarning("Failed to read source file while uploading directory");
                     socket->disconnectFromHost();
                     return;
                 }
-            } else {
-                // 发送数据块
-                const qint64 written = socket->write(chunk);
-                if (written <= 0) {
-                    return;
-                }
-                if (written < chunk.size()) {
-                    pendingChunk = chunk.mid(written);
-                }
-                info.bytesTransferred += written;
-                if (shouldReportProgress(info)) {
-                    emit uploadProgress(info.fileId, info.bytesTransferred, info.fileSize);
-                }
-                continue;
             }
+
+            // 发送数据块
+            const qint64 written = socket->write(chunk);
+            if (written <= 0) {
+                return;
+            }
+            if (written < chunk.size()) {
+                pendingChunk = chunk.mid(written);
+            }
+
+            info.bytesTransferred += written;
+            if (shouldReportProgress(info)) {
+                emit uploadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+            }
+            continue;
         }
 
-        // 需要开始下一个文件
+        // 没有打开的文件，检查是否所有文件都已完成
         if (info.completedFiles >= info.totalFiles) {
             // 所有文件完成，检查是否所有数据都已发送
             if (socket->bytesToWrite() == 0) {
                 // 所有数据都已发送完成
+                qDebug() << "Directory upload complete, all files sent, disconnecting";
                 socket->setProperty("upload_finished", true);
                 emit uploadComplete(info.fileId);
                 socket->disconnectFromHost();
                 return;
             }
             // 还有数据在发送中，等待 bytesWritten 信号再次触发
+            qDebug() << "All files completed but " << socket->bytesToWrite() << " bytes still in write buffer, waiting...";
             return;
         }
 
+        // 需要开始下一个文件
         if (info.completedFiles < info.pendingRelativePaths.size()) {
             QString relativePath = info.pendingRelativePaths[info.completedFiles];
             QString fullPath = QDir(info.folderRootPath).filePath(relativePath);
@@ -477,6 +484,7 @@ void FileTransferManager::sendDirFileChunk(QTcpSocket* socket) {
                 .arg(fileSize)
                 .toUtf8();
             socket->write(fileHeader);
+            socket->flush();  // 确保文件头被发送
 
             // 打开文件准备读取
             QFile* file = new QFile(fullPath, this);
@@ -487,6 +495,7 @@ void FileTransferManager::sendDirFileChunk(QTcpSocket* socket) {
                 return;
             }
             socket->setProperty("file", QVariant::fromValue(file));
+            // 文件已打开，下次循环开始发送数据
         }
     }
 }
@@ -620,6 +629,7 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
             // 开始接收第一个文件
             if (info.totalFiles > 0) {
                 // 等待下一个 FILE 响应头
+                return;
             } else {
                 // 空文件夹，直接完成
                 emit downloadComplete(info.fileId, info.filePath);
@@ -742,6 +752,7 @@ void FileTransferManager::handleDirDownloadResponse(QTcpSocket* socket) {
     if (info.currentFileSize == 0) {
         int newlineIndex = m_buffers[socket].indexOf('\n');
         if (newlineIndex == -1) {
+            qDebug() << "Directory download: waiting for FILE header, buffer size:" << m_buffers[socket].size();
             return;  // 等待文件头
         }
 
