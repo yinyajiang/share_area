@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(ShareArea VERSION 1.0.0 LANGUAGES CXX)
 
+# Allow overriding the app version from command line (e.g., CI)
+set(APP_VERSION "${PROJECT_VERSION}" CACHE STRING "Application version")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -109,10 +112,17 @@ if(APPLE)
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_GUI_IDENTIFIER com.sharearea.app
         MACOSX_BUNDLE_BUNDLE_NAME ShareArea
-        MACOSX_BUNDLE_BUNDLE_VERSION 1.0.0
-        MACOSX_BUNDLE_SHORT_VERSION_STRING 1.0.0
+        MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION}
+        MACOSX_BUNDLE_ICON_FILE icon.icns
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resources/Info.plist.in"
     )
+
+    # Copy icon into app bundle's Resources
+    set_source_files_properties(resources/icons/icon.icns PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources"
+    )
+    target_sources(ShareArea PRIVATE resources/icons/icon.icns)
 endif()
 
 # Windows
