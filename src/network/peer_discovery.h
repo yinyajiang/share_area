@@ -30,6 +30,7 @@ public:
     void removeFile(const QString& fileId);
     void setTransferPort(int port);
     QList<PeerInfo> peers() const;
+    void setMultiAddressBroadcast(bool on);
 
 signals:
     void peerFound(const QString& deviceId, const QString& deviceName, const QHostAddress& address, int transferPort);

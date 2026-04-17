@@ -20,7 +20,7 @@ OutputDir=../output
 PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-SetupIconFile=..\resources\icons\app.ico
+SetupIconFile=..\resources\icons\icon.ico
 DisableProgramGroupPage=yes
 
 [Languages]

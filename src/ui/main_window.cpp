@@ -435,6 +435,14 @@ void MainWindow::setupConnections() {
             &MainWindow::onChangeCode);
     connect(m_trayIcon, &SystemTray::debugLogToggled, this,
             &MainWindow::onDebugLogToggled);
+    connect(m_trayIcon, &SystemTray::multiAddressBroadcastChanged, this,
+            [this](bool on) {
+        AppSettings::instance().setMultiAddressBroadcast(on);
+        AppSettings::instance().save();
+        if (m_discovery) {
+            m_discovery->setMultiAddressBroadcast(on);
+        }
+    });
     connect(m_trayIcon, &SystemTray::alwaysOnTopChanged, this, [this](bool on) {
         setWindowFlag(Qt::WindowStaysOnTopHint, on);
         show();

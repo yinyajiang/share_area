@@ -38,6 +38,10 @@ void PeerDiscovery::setupSocket() {
 void PeerDiscovery::start() {
     setupSocket();
 
+    if (AppSettings::instance().multiAddressBroadcast()) {
+        refreshBroadcastAddresses();
+    }
+
     m_broadcastTimer->start(Constants::BROADCAST_INTERVAL_MS);
     m_timeoutTimer->start(2000);
 
@@ -63,9 +67,15 @@ void PeerDiscovery::setTransferPort(int port) {
     m_transferPort = port;
 }
 
-void PeerDiscovery::sendAnnouncement() {
-    refreshBroadcastAddresses();
+void PeerDiscovery::setMultiAddressBroadcast(bool on) {
+    if (on) {
+        refreshBroadcastAddresses();
+    } else {
+        m_broadcastAddresses.clear();
+    }
+}
 
+void PeerDiscovery::sendAnnouncement() {
     if (m_deviceName.isEmpty()) {
         m_deviceName = AppSettings::instance().deviceName();
     }
