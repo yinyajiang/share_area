@@ -50,6 +50,10 @@ void AppSettings::setAutoDeleteSeconds(int seconds) {
     m_autoDeleteSeconds = qMax(0, seconds);
 }
 
+bool AppSettings::autoStart() const { return m_autoStart; }
+
+void AppSettings::setAutoStart(bool on) { m_autoStart = on; }
+
 void AppSettings::save() {
     m_settings.setValue(QStringLiteral("groupCode"), m_groupCode);
     m_settings.setValue(QStringLiteral("language"), m_language);
@@ -59,6 +63,7 @@ void AppSettings::save() {
     m_settings.setValue(QStringLiteral("alwaysOnTop"), m_alwaysOnTop);
     m_settings.setValue(QStringLiteral("downloadPath"), m_downloadPath);
     m_settings.setValue(QStringLiteral("autoDeleteSeconds"), m_autoDeleteSeconds);
+    m_settings.setValue(QStringLiteral("autoStart"), m_autoStart);
 }
 
 void AppSettings::load() {
@@ -87,4 +92,7 @@ void AppSettings::load() {
     m_autoDeleteSeconds =
         m_settings.value(QStringLiteral("autoDeleteSeconds"), 5).toInt();
     m_autoDeleteSeconds = qMax(0, m_autoDeleteSeconds);
+
+    m_autoStart =
+        m_settings.value(QStringLiteral("autoStart"), true).toBool();
 }

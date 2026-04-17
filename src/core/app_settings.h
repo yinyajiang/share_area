@@ -33,6 +33,9 @@ class AppSettings : public QObject {
     int autoDeleteSeconds() const;
     void setAutoDeleteSeconds(int seconds);
 
+    bool autoStart() const;
+    void setAutoStart(bool on);
+
     void save();
     void load();
 
@@ -49,4 +52,5 @@ class AppSettings : public QObject {
     bool m_alwaysOnTop = true;
     QString m_downloadPath;
     int m_autoDeleteSeconds = 5;
+    bool m_autoStart = true;
 };

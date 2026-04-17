@@ -26,6 +26,7 @@ set(SOURCES
     src/main.cpp
     src/core/app_settings.cpp
     src/core/shared_file.cpp
+    src/core/auto_start.cpp
     src/network/peer_discovery.cpp
     src/network/file_transfer_manager.cpp
     src/ui/main_window.cpp
@@ -46,6 +47,7 @@ endif()
 set(HEADERS
     src/constants.h
     src/core/app_settings.h
+    src/core/auto_start.h
     src/core/shared_file.h
     src/network/peer_discovery.h
     src/network/file_transfer_manager.h

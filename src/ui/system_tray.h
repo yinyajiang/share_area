@@ -37,6 +37,7 @@ signals:
     void opacityChanged(int opacity);
     void changeDownloadPathRequested();
     void autoDeleteChanged(int seconds);
+    void autoStartChanged(bool on);
     void quitRequested();
 
 private:
@@ -55,6 +56,7 @@ private:
     QAction* m_downloadPathAction = nullptr;
     QMenu* m_autoDeleteMenu = nullptr;
     QActionGroup* m_autoDeleteGroup = nullptr;
+    QAction* m_autoStartAction = nullptr;
     QAction* m_quitAction = nullptr;
 
     void setupMenu();

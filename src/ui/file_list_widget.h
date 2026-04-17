@@ -8,6 +8,9 @@
 #include <QProgressBar>
 #include <QEnterEvent>
 #include <QElapsedTimer>
+#include <QGraphicsOpacityEffect>
+#include <QPropertyAnimation>
+#include <QTimer>
 #include "core/shared_file.h"
 
 /**
@@ -66,6 +69,7 @@ public:
 
     void addFile(const SharedFileInfo& file);
     void removeFile(const QString& fileId, const QString& deviceId = QString());
+    void removeFileWithFade(const QString& fileId);
     void clearRemoteFiles(const QString& deviceId);
     void updateTransferProgress(const QString& fileId, qint64 received, qint64 total);
     void updateFileSavePath(const QString& fileId, const QString& savePath);
@@ -78,6 +82,7 @@ signals:
 
 private slots:
     void onItemDoubleClicked(QListWidgetItem* item);
+    void onContextMenu(const QPoint& pos);
     void onDeleteRequested(const QString& fileId);
     void onCancelRequested(const QString& fileId);
 
@@ -87,6 +92,9 @@ private:
     QLabel* m_emptyIconLabel = nullptr;
     QMap<QString, QListWidgetItem*> m_items;  // fileId -> item
     QMap<QString, SharedFileInfo> m_fileInfos;
+    QMap<QString, QTimer*> m_expireTimers;   // fileId -> 5min expiry timer
+
+    void cancelExpireTimer(const QString& fileId);
 
     void setupUI();
     void updateEmptyState();

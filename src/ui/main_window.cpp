@@ -1,5 +1,6 @@
 #include "main_window.h"
 #include "core/app_settings.h"
+#include "core/auto_start.h"
 #include "network/file_transfer_manager.h"
 #include "network/peer_discovery.h"
 #include "ui/app_icon.h"
@@ -238,6 +239,11 @@ void MainWindow::initialize() {
     // 恢复自动清理菜单选中状态
     m_trayIcon->updateAutoDeleteChecked(AppSettings::instance().autoDeleteSeconds());
 
+    // 同步开机启动状态
+    if (AppSettings::instance().autoStart()) {
+        AutoStart::setEnabled(true);
+    }
+
     // 窗口置顶
     if (AppSettings::instance().alwaysOnTop()) {
         setWindowFlag(Qt::WindowStaysOnTopHint, true);
@@ -449,6 +455,11 @@ void MainWindow::setupConnections() {
     });
     connect(m_trayIcon, &SystemTray::autoDeleteChanged, this, [this](int seconds) {
         AppSettings::instance().setAutoDeleteSeconds(seconds);
+        AppSettings::instance().save();
+    });
+    connect(m_trayIcon, &SystemTray::autoStartChanged, this, [this](bool on) {
+        AutoStart::setEnabled(on);
+        AppSettings::instance().setAutoStart(on);
         AppSettings::instance().save();
     });
     connect(m_trayIcon, &SystemTray::quitRequested, this, [this]() {
@@ -716,6 +727,22 @@ void MainWindow::onShareClipboard() {
         return;
     }
 
+    // 检测 file:// 协议，当作文件分享
+    {
+        QList<QUrl> fileUrls;
+        for (const QString &line : text.split(QLatin1Char('\n'), Qt::SkipEmptyParts)) {
+            QString trimmed = line.trimmed();
+            QUrl url(trimmed);
+            if (url.isLocalFile()) {
+                fileUrls.append(url);
+            }
+        }
+        if (!fileUrls.isEmpty()) {
+            onFilesDropped(fileUrls);
+            return;
+        }
+    }
+
     QString preview = text.left(20).replace('\n', ' ').replace('\r', "");
     if (text.length() > 20) {
         preview += QStringLiteral("...");
@@ -889,7 +916,7 @@ void MainWindow::scheduleAutoDelete(const QString &fileId) {
     timer->setSingleShot(true);
     connect(timer, &QTimer::timeout, this, [this, fileId]() {
         m_autoDeleteTimers.remove(fileId);
-        m_fileList->removeFile(fileId);
+        m_fileList->removeFileWithFade(fileId);
     });
     m_autoDeleteTimers[fileId] = timer;
     timer->start(secs * 1000);

@@ -9,6 +9,7 @@
 #include <QGuiApplication>
 #include <QImage>
 #include <QIcon>
+#include <QFileDialog>
 #include <QDebug>
 
 // ==================== FileListItemWidget ====================
@@ -307,6 +308,11 @@ void FileListWidget::setupUI() {
 
     connect(m_listWidget, &QListWidget::itemDoubleClicked,
             this, &FileListWidget::onItemDoubleClicked);
+
+    // 右键菜单
+    m_listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_listWidget, &QListWidget::customContextMenuRequested,
+            this, &FileListWidget::onContextMenu);
 }
 
 void FileListWidget::addFile(const SharedFileInfo& file) {
@@ -349,11 +355,23 @@ void FileListWidget::addFile(const SharedFileInfo& file) {
     m_items[file.fileId] = item;
     m_fileInfos[file.fileId] = file;
 
+    // 5 分钟未下载则自动移除
+    auto* expireTimer = new QTimer(this);
+    expireTimer->setSingleShot(true);
+    connect(expireTimer, &QTimer::timeout, this, [this, id = file.fileId]() {
+        m_expireTimers.remove(id);
+        removeFileWithFade(id);
+    });
+    m_expireTimers[file.fileId] = expireTimer;
+    expireTimer->start(3 * 60 * 1000);
+
     updateEmptyState();
 }
 
 void FileListWidget::removeFile(const QString& fileId, const QString& deviceId) {
     Q_UNUSED(deviceId);
+
+    cancelExpireTimer(fileId);
 
     auto it = m_items.find(fileId);
     if (it != m_items.end()) {
@@ -366,6 +384,57 @@ void FileListWidget::removeFile(const QString& fileId, const QString& deviceId) 
 
         updateEmptyState();
     }
+}
+
+void FileListWidget::cancelExpireTimer(const QString& fileId) {
+    auto it = m_expireTimers.find(fileId);
+    if (it != m_expireTimers.end()) {
+        it.value()->stop();
+        it.value()->deleteLater();
+        m_expireTimers.erase(it);
+    }
+}
+
+void FileListWidget::removeFileWithFade(const QString& fileId) {
+    auto it = m_items.find(fileId);
+    if (it == m_items.end()) return;
+
+    auto* item = it.value();
+    auto* widget = qobject_cast<FileListItemWidget*>(m_listWidget->itemWidget(item));
+    if (!widget) {
+        removeFile(fileId);
+        return;
+    }
+
+    // 淡化动画
+    auto* effect = new QGraphicsOpacityEffect(widget);
+    effect->setOpacity(1.0);
+    widget->setGraphicsEffect(effect);
+
+    auto* anim = new QPropertyAnimation(effect, "opacity");
+    anim->setDuration(300);
+    anim->setStartValue(1.0);
+    anim->setEndValue(0.0);
+    anim->setEasingCurve(QEasingCurve::OutQuad);
+
+    // 动画结束后缩小高度
+    connect(anim, &QPropertyAnimation::finished, this, [this, fileId, item, widget]() {
+        widget->setGraphicsEffect(nullptr);
+
+        auto* collapse = new QPropertyAnimation(widget, "maximumHeight");
+        collapse->setDuration(150);
+        collapse->setStartValue(widget->height());
+        collapse->setEndValue(0);
+        collapse->setEasingCurve(QEasingCurve::OutQuad);
+        connect(collapse, &QPropertyAnimation::finished, this, [this, fileId]() {
+            removeFile(fileId);
+        });
+        widget->setGraphicsEffect(nullptr);
+        collapse->start(QAbstractAnimation::DeleteWhenStopped);
+        item->setSizeHint(QSize(0, 0));
+    });
+
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void FileListWidget::clearRemoteFiles(const QString& deviceId) {
@@ -384,6 +453,9 @@ void FileListWidget::clearRemoteFiles(const QString& deviceId) {
 }
 
 void FileListWidget::updateTransferProgress(const QString& fileId, qint64 received, qint64 total) {
+    // 下载开始，取消过期定时器
+    cancelExpireTimer(fileId);
+
     auto it = m_items.find(fileId);
     if (it != m_items.end()) {
         auto* item = it.value();
@@ -502,6 +574,42 @@ void FileListWidget::onDeleteRequested(const QString& fileId) {
 
 void FileListWidget::onCancelRequested(const QString& fileId) {
     emit fileCancelRequested(fileId);
+}
+
+void FileListWidget::onContextMenu(const QPoint& pos) {
+    QListWidgetItem* item = m_listWidget->itemAt(pos);
+    if (!item) return;
+
+    auto* widget = qobject_cast<FileListItemWidget*>(m_listWidget->itemWidget(item));
+    if (!widget) return;
+
+    QString fileId = widget->fileId();
+    auto it = m_fileInfos.find(fileId);
+    if (it == m_fileInfos.end()) return;
+
+    const SharedFileInfo& info = it.value();
+
+    // 已下载或剪贴板条目不处理
+    if (info.isClipboard() || !info.localSavePath.isEmpty()) return;
+
+    QString defaultDir = AppSettings::instance().downloadPath();
+    if (defaultDir.isEmpty()) {
+        defaultDir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    }
+
+    QString dir = QFileDialog::getExistingDirectory(
+        this, tr("选择下载目录"), defaultDir);
+    if (dir.isEmpty()) return;
+
+    QDir().mkpath(dir);
+    QString savePath = dir + QLatin1Char('/') + info.fileName;
+
+    if (QFile::exists(savePath) || QDir(savePath).exists()) {
+        savePath = dir + QLatin1Char('/')
+                   + info.fileId + QLatin1Char('_') + info.fileName;
+    }
+
+    emit fileDownloadRequested(info, savePath);
 }
 
 void FileListWidget::resetDownload(const QString& fileId) {

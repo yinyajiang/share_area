@@ -48,14 +48,6 @@ void SystemTray::setupMenu() {
     connect(m_changeCodeAction, &QAction::triggered, this,
             &SystemTray::changeCodeRequested);
 
-    // 调试日志
-    m_debugLogAction = m_contextMenu->addAction(tr("调试日志"));
-    m_debugLogAction->setCheckable(true);
-    m_debugLogAction->setChecked(false);
-    connect(m_debugLogAction, &QAction::triggered, this, [this]() {
-        emit debugLogToggled(m_debugLogAction->isChecked());
-    });
-
     // 窗口置顶
     m_alwaysOnTopAction = m_contextMenu->addAction(tr("窗口置顶"));
     m_alwaysOnTopAction->setCheckable(true);
@@ -96,12 +88,12 @@ void SystemTray::setupMenu() {
             [this](int value) { emit opacityChanged(value); });
 
     // 下载路径
-    m_downloadPathAction = m_contextMenu->addAction(tr("下载路径..."));
+    m_downloadPathAction = m_contextMenu->addAction(tr("默认下载目录"));
     connect(m_downloadPathAction, &QAction::triggered, this,
             &SystemTray::changeDownloadPathRequested);
 
-    // 自动移除子菜单
-    m_autoDeleteMenu = m_contextMenu->addMenu(tr("自动移除"));
+    // 自动移除已下载项子菜单
+    m_autoDeleteMenu = m_contextMenu->addMenu(tr("自动移除已下载项"));
     m_autoDeleteGroup = new QActionGroup(this);
 
     struct Option { QString label; int seconds; };
@@ -126,8 +118,24 @@ void SystemTray::setupMenu() {
         });
     }
 
+    // 开机启动
+    m_autoStartAction = m_contextMenu->addAction(tr("开机启动"));
+    m_autoStartAction->setCheckable(true);
+    m_autoStartAction->setChecked(AppSettings::instance().autoStart());
+    connect(m_autoStartAction, &QAction::triggered, this, [this]() {
+        emit autoStartChanged(m_autoStartAction->isChecked());
+    });
+
     // 退出
     m_contextMenu->addSeparator();
+
+    m_debugLogAction = m_contextMenu->addAction(tr("调试日志"));
+    m_debugLogAction->setCheckable(true);
+    m_debugLogAction->setChecked(false);
+    connect(m_debugLogAction, &QAction::triggered, this, [this]() {
+        emit debugLogToggled(m_debugLogAction->isChecked());
+    });
+
     m_quitAction = m_contextMenu->addAction(tr("退出"));
     m_quitAction->setShortcut(QStringLiteral("Ctrl+Q"));
     connect(m_quitAction, &QAction::triggered, this,
@@ -187,9 +195,10 @@ void SystemTray::retranslateUi() {
     m_debugLogAction->setText(tr("调试日志"));
     m_alwaysOnTopAction->setText(tr("窗口置顶"));
     m_opacityMenu->setTitle(tr("透明度"));
-    m_downloadPathAction->setText(tr("下载路径..."));
-    m_autoDeleteMenu->setTitle(tr("自动移除"));
-    // 更新自动移除选项文字
+    m_downloadPathAction->setText(tr("默认下载目录"));
+    m_autoDeleteMenu->setTitle(tr("自动移除已下载项"));
+    m_autoStartAction->setText(tr("开机启动"));
+    // 更新自动移除已下载项选项文字
     struct { int secs; const char *key; } labels[] = {
         { 0, QT_TR_NOOP("手动删除") },
         { 5, QT_TR_NOOP("5 秒") },
