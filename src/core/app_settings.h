@@ -27,6 +27,12 @@ class AppSettings : public QObject {
     bool alwaysOnTop() const;
     void setAlwaysOnTop(bool alwaysOnTop);
 
+    QString downloadPath() const;
+    void setDownloadPath(const QString &path);
+
+    int autoDeleteSeconds() const;
+    void setAutoDeleteSeconds(int seconds);
+
     void save();
     void load();
 
@@ -41,4 +47,6 @@ class AppSettings : public QObject {
     QString m_deviceId;
     int m_opacity = 92;
     bool m_alwaysOnTop = true;
+    QString m_downloadPath;
+    int m_autoDeleteSeconds = 5;
 };

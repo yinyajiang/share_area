@@ -1,4 +1,5 @@
 #include "file_list_widget.h"
+#include "core/app_settings.h"
 #include <QHBoxLayout>
 #include <QStyle>
 #include <QFileInfo>
@@ -478,8 +479,11 @@ void FileListWidget::onItemDoubleClicked(QListWidgetItem* item) {
         return;
     }
 
-    // 直接下载到系统 Downloads 目录
-    QString downloadDir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    // 直接下载到设置的下载目录（默认系统 Downloads 目录）
+    QString downloadDir = AppSettings::instance().downloadPath();
+    if (downloadDir.isEmpty()) {
+        downloadDir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    }
     QDir().mkpath(downloadDir);
     QString savePath = downloadDir + QLatin1Char('/') + it.value().fileName;
 

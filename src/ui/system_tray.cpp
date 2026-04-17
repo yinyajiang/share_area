@@ -95,6 +95,37 @@ void SystemTray::setupMenu() {
     connect(m_opacitySlider, &QSlider::valueChanged, this,
             [this](int value) { emit opacityChanged(value); });
 
+    // 下载路径
+    m_downloadPathAction = m_contextMenu->addAction(tr("下载路径..."));
+    connect(m_downloadPathAction, &QAction::triggered, this,
+            &SystemTray::changeDownloadPathRequested);
+
+    // 自动移除子菜单
+    m_autoDeleteMenu = m_contextMenu->addMenu(tr("自动移除"));
+    m_autoDeleteGroup = new QActionGroup(this);
+
+    struct Option { QString label; int seconds; };
+    QList<Option> options = {
+        { tr("手动删除"), 0 },
+        { tr("5 秒"), 5 },
+        { tr("30 秒"), 30 },
+        { tr("1 分钟"), 60 },
+        { tr("5 分钟"), 300 },
+    };
+    int currentSecs = AppSettings::instance().autoDeleteSeconds();
+    for (const auto &opt : options) {
+        QAction *act = m_autoDeleteMenu->addAction(opt.label);
+        act->setCheckable(true);
+        act->setData(opt.seconds);
+        m_autoDeleteGroup->addAction(act);
+        if (opt.seconds == currentSecs) {
+            act->setChecked(true);
+        }
+        connect(act, &QAction::triggered, this, [this, act]() {
+            emit autoDeleteChanged(act->data().toInt());
+        });
+    }
+
     // 退出
     m_contextMenu->addSeparator();
     m_quitAction = m_contextMenu->addAction(tr("退出"));
@@ -133,6 +164,22 @@ void SystemTray::setAlwaysOnTopChecked(bool on) {
     m_alwaysOnTopAction->setChecked(on);
 }
 
+void SystemTray::updateAutoDeleteChecked(int seconds) {
+    for (QAction *act : m_autoDeleteGroup->actions()) {
+        if (act->data().toInt() == seconds) {
+            act->setChecked(true);
+            return;
+        }
+    }
+    // fallback: select manual (0)
+    for (QAction *act : m_autoDeleteGroup->actions()) {
+        if (act->data().toInt() == 0) {
+            act->setChecked(true);
+            return;
+        }
+    }
+}
+
 void SystemTray::retranslateUi() {
     m_showAction->setText(tr("显示主窗口"));
     m_languageMenu->setTitle(tr("语言设置"));
@@ -140,5 +187,19 @@ void SystemTray::retranslateUi() {
     m_debugLogAction->setText(tr("调试日志"));
     m_alwaysOnTopAction->setText(tr("窗口置顶"));
     m_opacityMenu->setTitle(tr("透明度"));
+    m_downloadPathAction->setText(tr("下载路径..."));
+    m_autoDeleteMenu->setTitle(tr("自动移除"));
+    // 更新自动移除选项文字
+    struct { int secs; const char *key; } labels[] = {
+        { 0, QT_TR_NOOP("手动删除") },
+        { 5, QT_TR_NOOP("5 秒") },
+        { 30, QT_TR_NOOP("30 秒") },
+        { 60, QT_TR_NOOP("1 分钟") },
+        { 300, QT_TR_NOOP("5 分钟") },
+    };
+    const auto actions = m_autoDeleteGroup->actions();
+    for (int i = 0; i < actions.size() && i < 5; ++i) {
+        actions[i]->setText(tr(labels[i].key));
+    }
     m_quitAction->setText(tr("退出"));
 }

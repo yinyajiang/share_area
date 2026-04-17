@@ -235,6 +235,9 @@ void MainWindow::initialize() {
     // 设置语言菜单初始选中
     m_trayIcon->updateLanguageChecked(m_currentLanguage);
 
+    // 恢复自动清理菜单选中状态
+    m_trayIcon->updateAutoDeleteChecked(AppSettings::instance().autoDeleteSeconds());
+
     // 窗口置顶
     if (AppSettings::instance().alwaysOnTop()) {
         setWindowFlag(Qt::WindowStaysOnTopHint, true);
@@ -346,6 +349,7 @@ void MainWindow::setupConnections() {
                 }
                 if (m_trayIcon)
                     m_trayIcon->showMessage(tr("剪贴板已同步"), tr("内容已拷贝到剪贴板"));
+                scheduleAutoDelete(fileId);
             });
 
     connect(m_fileList, &FileListWidget::fileDownloadRequested, this,
@@ -386,7 +390,16 @@ void MainWindow::setupConnections() {
             });
 
     connect(m_fileList, &FileListWidget::fileDeleteRequested, this,
-            [this](const QString &fileId) { m_fileList->removeFile(fileId); });
+            [this](const QString &fileId) {
+                // 取消自动清理定时器
+                auto timerIt = m_autoDeleteTimers.find(fileId);
+                if (timerIt != m_autoDeleteTimers.end()) {
+                    timerIt.value()->stop();
+                    timerIt.value()->deleteLater();
+                    m_autoDeleteTimers.erase(timerIt);
+                }
+                m_fileList->removeFile(fileId);
+            });
 
     connect(m_fileList, &FileListWidget::fileCancelRequested, this,
             [this](const QString &fileId) {
@@ -421,6 +434,21 @@ void MainWindow::setupConnections() {
     connect(m_trayIcon, &SystemTray::opacityChanged, this, [this](int value) {
         setWindowOpacity(value / 100.0);
         AppSettings::instance().setOpacity(value);
+        AppSettings::instance().save();
+    });
+    connect(m_trayIcon, &SystemTray::changeDownloadPathRequested, this, [this]() {
+        QString current = AppSettings::instance().downloadPath();
+        if (current.isEmpty()) {
+            current = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+        }
+        QString dir = QFileDialog::getExistingDirectory(this, tr("选择下载路径"), current);
+        if (!dir.isEmpty()) {
+            AppSettings::instance().setDownloadPath(dir);
+            AppSettings::instance().save();
+        }
+    });
+    connect(m_trayIcon, &SystemTray::autoDeleteChanged, this, [this](int seconds) {
+        AppSettings::instance().setAutoDeleteSeconds(seconds);
         AppSettings::instance().save();
     });
     connect(m_trayIcon, &SystemTray::quitRequested, this, [this]() {
@@ -772,6 +800,9 @@ void MainWindow::onDownloadComplete(const QString &fileId,
 
     if (m_trayIcon)
         m_trayIcon->showMessage(tr("下载完成"), tr("文件已成功下载"));
+
+    // 自动清理
+    scheduleAutoDelete(fileId);
 }
 
 void MainWindow::onDownloadError(const QString &fileId, const QString &error) {
@@ -848,6 +879,20 @@ void MainWindow::updateOnlineCount() {
     int count = m_peerTransferPorts.size();
     m_onlineLabel->setText(tr("%n 在线", nullptr, count));
     m_breathingDot->setActive(count > 0);
+}
+
+void MainWindow::scheduleAutoDelete(const QString &fileId) {
+    int secs = AppSettings::instance().autoDeleteSeconds();
+    if (secs <= 0) return;
+
+    auto *timer = new QTimer(this);
+    timer->setSingleShot(true);
+    connect(timer, &QTimer::timeout, this, [this, fileId]() {
+        m_autoDeleteTimers.remove(fileId);
+        m_fileList->removeFile(fileId);
+    });
+    m_autoDeleteTimers[fileId] = timer;
+    timer->start(secs * 1000);
 }
 
 void MainWindow::onDebugLogToggled(bool enabled) {

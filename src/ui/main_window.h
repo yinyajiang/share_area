@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QSvgRenderer>
 #include <QThread>
+#include <QTimer>
 #include <QTranslator>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -92,6 +93,9 @@ class MainWindow : public QMainWindow {
     // 标记强制退出（跳过 closeEvent 的隐藏逻辑）
     bool m_forceQuit = false;
 
+    // 自动清理定时器
+    QMap<QString, QTimer*> m_autoDeleteTimers;
+
     // SVG 背景渲染器
     QSvgRenderer *m_bgRenderer = nullptr;
 
@@ -104,4 +108,5 @@ class MainWindow : public QMainWindow {
     void updateOnlineCount();
     void startTransferService();
     void stopTransferService();
+    void scheduleAutoDelete(const QString &fileId);
 };

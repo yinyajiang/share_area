@@ -25,6 +25,7 @@ public:
     void setToolTip(const QString& tooltip);
     void updateLanguageChecked(const QString& lang);
     void setAlwaysOnTopChecked(bool on);
+    void updateAutoDeleteChecked(int seconds);
     void retranslateUi();
 
 signals:
@@ -34,6 +35,8 @@ signals:
     void debugLogToggled(bool enabled);
     void alwaysOnTopChanged(bool on);
     void opacityChanged(int opacity);
+    void changeDownloadPathRequested();
+    void autoDeleteChanged(int seconds);
     void quitRequested();
 
 private:
@@ -49,6 +52,9 @@ private:
     QAction* m_alwaysOnTopAction = nullptr;
     QMenu* m_opacityMenu = nullptr;
     QSlider* m_opacitySlider = nullptr;
+    QAction* m_downloadPathAction = nullptr;
+    QMenu* m_autoDeleteMenu = nullptr;
+    QActionGroup* m_autoDeleteGroup = nullptr;
     QAction* m_quitAction = nullptr;
 
     void setupMenu();

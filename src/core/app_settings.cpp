@@ -40,6 +40,16 @@ void AppSettings::setAlwaysOnTop(bool alwaysOnTop) {
     m_alwaysOnTop = alwaysOnTop;
 }
 
+QString AppSettings::downloadPath() const { return m_downloadPath; }
+
+void AppSettings::setDownloadPath(const QString &path) { m_downloadPath = path; }
+
+int AppSettings::autoDeleteSeconds() const { return m_autoDeleteSeconds; }
+
+void AppSettings::setAutoDeleteSeconds(int seconds) {
+    m_autoDeleteSeconds = qMax(0, seconds);
+}
+
 void AppSettings::save() {
     m_settings.setValue(QStringLiteral("groupCode"), m_groupCode);
     m_settings.setValue(QStringLiteral("language"), m_language);
@@ -47,6 +57,8 @@ void AppSettings::save() {
     m_settings.setValue(QStringLiteral("deviceId"), m_deviceId);
     m_settings.setValue(QStringLiteral("opacity"), m_opacity);
     m_settings.setValue(QStringLiteral("alwaysOnTop"), m_alwaysOnTop);
+    m_settings.setValue(QStringLiteral("downloadPath"), m_downloadPath);
+    m_settings.setValue(QStringLiteral("autoDeleteSeconds"), m_autoDeleteSeconds);
 }
 
 void AppSettings::load() {
@@ -68,4 +80,11 @@ void AppSettings::load() {
 
     m_alwaysOnTop =
         m_settings.value(QStringLiteral("alwaysOnTop"), true).toBool();
+
+    m_downloadPath =
+        m_settings.value(QStringLiteral("downloadPath")).toString();
+
+    m_autoDeleteSeconds =
+        m_settings.value(QStringLiteral("autoDeleteSeconds"), 5).toInt();
+    m_autoDeleteSeconds = qMax(0, m_autoDeleteSeconds);
 }
