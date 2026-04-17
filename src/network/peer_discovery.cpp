@@ -64,6 +64,8 @@ void PeerDiscovery::setTransferPort(int port) {
 }
 
 void PeerDiscovery::sendAnnouncement() {
+    refreshBroadcastAddresses();
+
     if (m_deviceName.isEmpty()) {
         m_deviceName = AppSettings::instance().deviceName();
     }
@@ -79,7 +81,13 @@ void PeerDiscovery::sendAnnouncement() {
 }
 
 void PeerDiscovery::sendMessage(const QByteArray& message) {
-    m_socket->writeDatagram(message, QHostAddress::Broadcast, Constants::DISCOVERY_PORT);
+    if (m_broadcastAddresses.isEmpty()) {
+        m_socket->writeDatagram(message, QHostAddress::Broadcast, Constants::DISCOVERY_PORT);
+        return;
+    }
+    for (const QHostAddress& addr : m_broadcastAddresses) {
+        m_socket->writeDatagram(message, addr, Constants::DISCOVERY_PORT);
+    }
 }
 
 void PeerDiscovery::onReadyRead() {
@@ -242,4 +250,27 @@ void PeerDiscovery::removeFile(const QString& fileId) {
 
 QList<PeerInfo> PeerDiscovery::peers() const {
     return m_peers.values();
+}
+
+void PeerDiscovery::refreshBroadcastAddresses() {
+    QList<QHostAddress> addresses;
+    for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces()) {
+        if (!(iface.flags() & QNetworkInterface::IsUp) ||
+            (iface.flags() & QNetworkInterface::IsLoopBack)) {
+            continue;
+        }
+        for (const QNetworkAddressEntry& entry : iface.addressEntries()) {
+            QHostAddress ip = entry.ip();
+            if (ip.protocol() != QAbstractSocket::IPv4Protocol ||
+                ip == QHostAddress::LocalHost) {
+                continue;
+            }
+            QHostAddress broadcast = entry.broadcast();
+            if (!broadcast.isNull()) {
+                addresses.append(broadcast);
+            }
+        }
+    }
+    m_broadcastAddresses = addresses;
+    qDebug() << "Broadcast addresses:" << addresses;
 }

@@ -5,6 +5,7 @@
 #include <QHostAddress>
 #include <QMap>
 #include <QDateTime>
+#include <QList>
 #include "core/shared_file.h"
 #include "constants.h"
 
@@ -50,9 +51,11 @@ private:
     QString m_deviceName;
     QMap<QString, PeerInfo> m_peers;  // deviceId -> PeerInfo
     QMap<QString, SharedFileInfo> m_localFiles;  // fileId -> info
+    QList<QHostAddress> m_broadcastAddresses;
     int m_transferPort = 0;
 
     void setupSocket();
     void parseMessage(const QByteArray& data, const QHostAddress& sender);
     void sendMessage(const QByteArray& message);
+    void refreshBroadcastAddresses();
 };
