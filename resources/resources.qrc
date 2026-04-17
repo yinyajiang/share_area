@@ -2,7 +2,6 @@
     <qresource prefix="/">
         <file>icons/icon.svg</file>
         <file>icons/tray-icon.svg</file>
-        <file>icons/logo.svg</file>
         <file>icons/drop-area.svg</file>
         <file>icons/empty-list.svg</file>
         <file>icons/close.svg</file>

@@ -90,7 +90,7 @@ void SetupDialog::setupUI() {
     auto *topBar = new QHBoxLayout();
     topBar->setSpacing(8);
 
-    QIcon logoIcon(QStringLiteral(":/icons/logo.svg"));
+    QIcon logoIcon(QStringLiteral(":/icons/icon.svg"));
     auto *logoLabel = new QLabel(this);
     logoLabel->setPixmap(logoIcon.pixmap(28, 28));
     topBar->addWidget(logoLabel);

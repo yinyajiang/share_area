@@ -15,19 +15,19 @@
 #include "ui/macos_blur.h"
 #endif
 #include <QApplication>
-#include <QCloseEvent>
-#include <QClipboard>
 #include <QBuffer>
+#include <QClipboard>
+#include <QCloseEvent>
 #include <QDir>
 #include <QDirIterator>
-#include <QGuiApplication>
-#include <QImage>
-#include <QMimeData>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QGuiApplication>
 #include <QHostInfo>
+#include <QImage>
 #include <QLinearGradient>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -113,7 +113,7 @@ void MainWindow::setupTitleBar() {
     layout->setSpacing(8);
 
     // Logo + 标题
-    QIcon logoIcon(QStringLiteral(":/icons/logo.svg"));
+    QIcon logoIcon(QStringLiteral(":/icons/icon.svg"));
     auto *logoLabel = new QLabel(this);
     logoLabel->setPixmap(logoIcon.pixmap(22, 22));
     layout->addWidget(logoLabel);
@@ -237,7 +237,8 @@ void MainWindow::initialize() {
     m_trayIcon->updateLanguageChecked(m_currentLanguage);
 
     // 恢复自动清理菜单选中状态
-    m_trayIcon->updateAutoDeleteChecked(AppSettings::instance().autoDeleteSeconds());
+    m_trayIcon->updateAutoDeleteChecked(
+        AppSettings::instance().autoDeleteSeconds());
 
     // 同步开机启动状态
     if (AppSettings::instance().autoStart()) {
@@ -340,23 +341,26 @@ void MainWindow::setupConnections() {
             &MainWindow::onDownloadError);
 
     // 剪贴板内容接收后直接写入系统剪贴板
-    connect(m_transferManager, &FileTransferManager::clipboardReceived, this,
-            [this](const QString &fileId, const QByteArray &data, int shareType) {
-                if (shareType == static_cast<int>(ShareType::ClipboardImage)) {
-                    QImage image = QImage::fromData(data);
-                    if (!image.isNull()) {
-                        QGuiApplication::clipboard()->setImage(image);
-                    }
-                    m_fileList->updateFileSavePath(fileId, QStringLiteral("__clipboard_done__"));
-                } else {
-                    QString text = QString::fromUtf8(data);
-                    QGuiApplication::clipboard()->setText(text);
-                    m_fileList->updateFileSavePath(fileId, text);
+    connect(
+        m_transferManager, &FileTransferManager::clipboardReceived, this,
+        [this](const QString &fileId, const QByteArray &data, int shareType) {
+            if (shareType == static_cast<int>(ShareType::ClipboardImage)) {
+                QImage image = QImage::fromData(data);
+                if (!image.isNull()) {
+                    QGuiApplication::clipboard()->setImage(image);
                 }
-                if (m_trayIcon)
-                    m_trayIcon->showMessage(tr("剪贴板已同步"), tr("内容已拷贝到剪贴板"));
-                scheduleAutoDelete(fileId);
-            });
+                m_fileList->updateFileSavePath(
+                    fileId, QStringLiteral("__clipboard_done__"));
+            } else {
+                QString text = QString::fromUtf8(data);
+                QGuiApplication::clipboard()->setText(text);
+                m_fileList->updateFileSavePath(fileId, text);
+            }
+            if (m_trayIcon)
+                m_trayIcon->showMessage(tr("剪贴板已同步"),
+                                        tr("内容已拷贝到剪贴板"));
+            scheduleAutoDelete(fileId);
+        });
 
     connect(m_fileList, &FileListWidget::fileDownloadRequested, this,
             [this](const SharedFileInfo &file, const QString &savePath) {
@@ -442,21 +446,25 @@ void MainWindow::setupConnections() {
         AppSettings::instance().setOpacity(value);
         AppSettings::instance().save();
     });
-    connect(m_trayIcon, &SystemTray::changeDownloadPathRequested, this, [this]() {
-        QString current = AppSettings::instance().downloadPath();
-        if (current.isEmpty()) {
-            current = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-        }
-        QString dir = QFileDialog::getExistingDirectory(this, tr("选择下载路径"), current);
-        if (!dir.isEmpty()) {
-            AppSettings::instance().setDownloadPath(dir);
-            AppSettings::instance().save();
-        }
-    });
-    connect(m_trayIcon, &SystemTray::autoDeleteChanged, this, [this](int seconds) {
-        AppSettings::instance().setAutoDeleteSeconds(seconds);
-        AppSettings::instance().save();
-    });
+    connect(m_trayIcon, &SystemTray::changeDownloadPathRequested, this,
+            [this]() {
+                QString current = AppSettings::instance().downloadPath();
+                if (current.isEmpty()) {
+                    current = QStandardPaths::writableLocation(
+                        QStandardPaths::DownloadLocation);
+                }
+                QString dir = QFileDialog::getExistingDirectory(
+                    this, tr("选择下载路径"), current);
+                if (!dir.isEmpty()) {
+                    AppSettings::instance().setDownloadPath(dir);
+                    AppSettings::instance().save();
+                }
+            });
+    connect(m_trayIcon, &SystemTray::autoDeleteChanged, this,
+            [this](int seconds) {
+                AppSettings::instance().setAutoDeleteSeconds(seconds);
+                AppSettings::instance().save();
+            });
     connect(m_trayIcon, &SystemTray::autoStartChanged, this, [this](bool on) {
         AutoStart::setEnabled(on);
         AppSettings::instance().setAutoStart(on);
@@ -616,12 +624,14 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
                 it.next();
                 QFileInfo fi(it.fileInfo());
                 // Skip symlinks to avoid infinite loops
-                if (fi.isSymLink()) continue;
+                if (fi.isSymLink())
+                    continue;
                 totalSize += fi.size();
                 fileCount++;
             }
 
-            // Get directory name using QDir::dirName() instead of QFileInfo::fileName()
+            // Get directory name using QDir::dirName() instead of
+            // QFileInfo::fileName()
             QString dirName = QDir(filePath).dirName();
             if (dirName.isEmpty()) {
                 dirName = fileInfo.fileName();
@@ -631,8 +641,7 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
             }
 
             SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
-                dirName, filePath, totalSize, deviceName,
-                deviceName);
+                dirName, filePath, totalSize, deviceName, deviceName);
             sharedFile.shareType = ShareType::Directory;
             sharedFile.fileCount = fileCount;
             m_localSharedFiles[sharedFile.fileId] = sharedFile;
@@ -652,8 +661,7 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
                 m_discovery->announceFile(sharedFile);
 
             qDebug() << "Shared directory:" << sharedFile.fileName
-                     << "files:" << fileCount
-                     << "ID:" << sharedFile.fileId;
+                     << "files:" << fileCount << "ID:" << sharedFile.fileId;
         } else {
             SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
                 fileInfo.fileName(), filePath, fileInfo.size(), deviceName,
@@ -701,12 +709,13 @@ void MainWindow::onShareClipboard() {
             SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
                 tr("剪贴板图片"), QString(), dataSize, deviceName, deviceName);
             sharedFile.shareType = ShareType::ClipboardImage;
-            sharedFile.rawData = buf.buffer();  // PNG bytes in memory
+            sharedFile.rawData = buf.buffer(); // PNG bytes in memory
 
             m_localSharedFiles[sharedFile.fileId] = sharedFile;
             if (m_transferManager) {
                 FileTransferManager *manager = m_transferManager;
-                const QMap<QString, SharedFileInfo> filesSnapshot = m_localSharedFiles;
+                const QMap<QString, SharedFileInfo> filesSnapshot =
+                    m_localSharedFiles;
                 QMetaObject::invokeMethod(
                     manager,
                     [manager, filesSnapshot]() {
@@ -716,7 +725,8 @@ void MainWindow::onShareClipboard() {
             }
             if (m_discovery)
                 m_discovery->announceFile(sharedFile);
-            qDebug() << "Shared clipboard image, size:" << dataSize << "ID:" << sharedFile.fileId;
+            qDebug() << "Shared clipboard image, size:" << dataSize
+                     << "ID:" << sharedFile.fileId;
             return;
         }
     }
@@ -730,7 +740,8 @@ void MainWindow::onShareClipboard() {
     // 检测 file:// 协议，当作文件分享
     {
         QList<QUrl> fileUrls;
-        for (const QString &line : text.split(QLatin1Char('\n'), Qt::SkipEmptyParts)) {
+        for (const QString &line :
+             text.split(QLatin1Char('\n'), Qt::SkipEmptyParts)) {
             QString trimmed = line.trimmed();
             QUrl url(trimmed);
             if (url.isLocalFile()) {
@@ -751,7 +762,7 @@ void MainWindow::onShareClipboard() {
     SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
         preview, QString(), text.toUtf8().size(), deviceName, deviceName);
     sharedFile.shareType = ShareType::Clipboard;
-    sharedFile.rawData = text.toUtf8();  // UTF-8 bytes in memory
+    sharedFile.rawData = text.toUtf8(); // UTF-8 bytes in memory
 
     m_localSharedFiles[sharedFile.fileId] = sharedFile;
     if (m_transferManager) {
@@ -910,7 +921,8 @@ void MainWindow::updateOnlineCount() {
 
 void MainWindow::scheduleAutoDelete(const QString &fileId) {
     int secs = AppSettings::instance().autoDeleteSeconds();
-    if (secs <= 0) return;
+    if (secs <= 0)
+        return;
 
     auto *timer = new QTimer(this);
     timer->setSingleShot(true);
