@@ -47,8 +47,5 @@ Name: "{group}\ShareArea"; Filename: "{app}\ShareArea.exe"
 Name: "{group}\{cm:UninstallProgram,ShareArea}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\ShareArea"; Filename: "{app}\ShareArea.exe"; Tasks: desktopicon
 
-[Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "ShareArea"; ValueData: "{app}\ShareArea.exe"; Flags: uninsdeletevalue; Tasks: autostart
-
 [Run]
 Filename: "{app}\ShareArea.exe"; Description: "{cm:LaunchProgram,ShareArea}"; Flags: nowait postinstall skipifsilent
