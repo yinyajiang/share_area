@@ -120,10 +120,12 @@ if(WIN32)
     set_target_properties(ShareArea PROPERTIES
         WIN32_EXECUTABLE TRUE
     )
-    # 自动部署 Qt 运行时库
-    add_custom_command(TARGET ShareArea POST_BUILD
-        COMMAND ${CMAKE_PREFIX_PATH}/bin/windeployqt.exe
-            "$<TARGET_FILE:ShareArea>"
-        COMMENT "Deploying Qt runtime libraries..."
-    )
+    # 查找 windeployqt（优先从 Qt 安装目录查找，其次从 PATH 查找）
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../../bin")
+    if(WINDEPLOYQT_EXECUTABLE)
+        add_custom_command(TARGET ShareArea POST_BUILD
+            COMMAND ${WINDEPLOYQT_EXECUTABLE} "$<TARGET_FILE:ShareArea>"
+            COMMENT "Deploying Qt runtime libraries..."
+        )
+    endif()
 endif()

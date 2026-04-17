@@ -41,10 +41,12 @@ jobs:
       - name: Configure CMake
         shell: pwsh
         run: |
-          # Qt6_DIR: C:\...\Qt\6.10.3\msvc2022_64\lib\cmake\Qt6
-          # CMAKE_PREFIX_PATH: C:\...\Qt\6.10.3\msvc2022_64
-          $prefix = $env:Qt6_DIR -replace '[/\\]lib[/\\]cmake[/\\]Qt6$', ''
-          cmake -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH=$prefix"
+          # install-qt-action 将 windeployqt 加入 PATH，从中反推 Qt 安装根目录
+          # windeployqt 路径: C:\...\Qt\6.10.3\msvc2022_64\bin\windeployqt.exe
+          # Qt 前缀:         C:\...\Qt\6.10.3\msvc2022_64
+          $qtBin = Split-Path (Get-Command windeployqt).Source
+          $qtPrefix = Split-Path $qtBin
+          cmake -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH=$qtPrefix"
 
       - name: Build
         run: cmake --build build --config Release --parallel
