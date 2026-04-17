@@ -54,6 +54,12 @@ jobs:
       - name: Install InnoSetup
         run: choco install innosetup -y
 
+      - name: Download InnoSetup Chinese language
+        shell: pwsh
+        run: |
+          $islDir = "C:\Program Files (x86)\Inno Setup 6\Languages"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl" -OutFile "$islDir\ChineseSimplified.isl"
+
       - name: Build Installer
         run: iscc script/setup.iss /DMyAppVersion="${{ steps.version.outputs.version }}"
 
