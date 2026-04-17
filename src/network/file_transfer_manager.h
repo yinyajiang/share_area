@@ -19,6 +19,9 @@ struct TransferInfo {
     bool headerParsed = false;  // download response header parsed
     QTcpSocket* socket = nullptr;
 
+    ShareType shareType = ShareType::File;  // for download routing
+    QByteArray memoryBuffer;                // clipboard: in-memory receive buffer
+
     // Directory transfer fields
     bool isDirectory = false;
     int totalFiles = 0;
@@ -49,6 +52,7 @@ public:
 signals:
     void downloadProgress(const QString& fileId, qint64 received, qint64 total);
     void downloadComplete(const QString& fileId, const QString& savePath);
+    void clipboardReceived(const QString& fileId, const QByteArray& data, int shareType);
     void downloadError(const QString& fileId, const QString& error);
     void uploadStarted(const QString& fileId);
     void uploadProgress(const QString& fileId, qint64 sent, qint64 total);
@@ -78,4 +82,7 @@ private:
     void sendDirFileChunk(QTcpSocket* socket);
     void handleDirDownloadResponse(QTcpSocket* socket);
     static QStringList enumerateDirFiles(const QString& rootPath);
+
+    // Clipboard transfer helpers
+    void handleClipboardClientRequest(QTcpSocket* socket, const QString& fileId);
 };

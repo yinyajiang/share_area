@@ -5,6 +5,7 @@
 #include <QDirIterator>
 #include <QNetworkProxy>
 #include <QDateTime>
+#include <QTimer>
 #include <array>
 
 namespace {
@@ -113,10 +114,11 @@ void FileTransferManager::requestFile(const SharedFileInfo& fileInfo,
     info.fileId = fileInfo.fileId;
     info.fileName = fileInfo.fileName;
     info.filePath = savePath;
-    info.isDirectory = fileInfo.isDirectory;
+    info.isDirectory = fileInfo.isDirectory();
     info.fileSize = 0;  // 由远端响应头提供
     info.bytesTransferred = 0;
     info.isUpload = false;
+    info.shareType = fileInfo.shareType;
     info.socket = socket;
 
     m_activeTransfers[socket] = info;
@@ -286,8 +288,14 @@ void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
 
     SharedFileInfo fileInfo = m_localFiles[fileId];
 
-    if (fileInfo.isDirectory) {
+    if (fileInfo.isDirectory()) {
         handleDirClientRequest(socket, fileId);
+        return;
+    }
+
+    // 所有剪贴板类型走内存传输（不使用临时文件）
+    if (fileInfo.isClipboard()) {
+        handleClipboardClientRequest(socket, fileId);
         return;
     }
 
@@ -335,6 +343,50 @@ void FileTransferManager::handleClientRequest(QTcpSocket* socket) {
 
     // 开始发送文件数据
     sendFileChunk(socket);
+}
+
+void FileTransferManager::handleClipboardClientRequest(QTcpSocket* socket, const QString& fileId) {
+    SharedFileInfo fileInfo = m_localFiles[fileId];
+    QByteArray content = fileInfo.rawData;  // text: UTF-8 bytes; image: PNG bytes
+    qint64 contentSize = content.size();
+
+    qDebug() << "Clipboard upload requested:" << fileInfo.fileName << "size:" << contentSize
+             << "type:" << static_cast<int>(fileInfo.shareType);
+
+    // 发送响应头: OK|fileSize\n
+    QByteArray header = QStringLiteral("OK|%1\n").arg(contentSize).toUtf8();
+    socket->write(header);
+
+    // 直接发送全部内容（剪贴板文本不会太大）
+    qint64 written = 0;
+    while (written < contentSize) {
+        qint64 w = socket->write(content.constData() + written, contentSize - written);
+        if (w <= 0) {
+            qWarning("Failed to write clipboard data to socket");
+            socket->disconnectFromHost();
+            return;
+        }
+        written += w;
+    }
+    socket->flush();
+
+    // 设置上传传输信息（用于进度和完成通知）
+    TransferInfo info;
+    info.fileId = fileId;
+    info.fileName = fileInfo.fileName;
+    info.fileSize = contentSize;
+    info.bytesTransferred = contentSize;
+    info.lastProgressBytes = 0;
+    info.lastProgressAtMs = 0;
+    info.isUpload = true;
+    info.socket = socket;
+    m_activeTransfers[socket] = info;
+
+    emit uploadStarted(fileId);
+    emit uploadComplete(fileId);
+
+    // 短暂延迟后关闭连接，确保数据发送
+    QTimer::singleShot(100, socket, &QTcpSocket::disconnectFromHost);
 }
 
 void FileTransferManager::handleDirClientRequest(QTcpSocket* socket, const QString& fileId) {
@@ -650,6 +702,12 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
             return;
         }
 
+        // 剪贴板下载：filePath 为空，纯内存接收
+        if (info.filePath.isEmpty()) {
+            // Data will be accumulated in memoryBuffer
+            qDebug() << "Clipboard download: in-memory, size:" << info.fileSize
+                     << "type:" << static_cast<int>(info.shareType);
+        } else {
         // 打开文件准备写入
         QDir dir;
         QString dirPath = QFileInfo(info.filePath).absolutePath();
@@ -673,11 +731,40 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
         }
 
         socket->setProperty("file", QVariant::fromValue(file));
+        }  // end else (non-clipboard file download)
     }
 
     // 文件夹下载 - 处理每个文件
     if (info.isDirectory) {
         handleDirDownloadResponse(socket);
+        return;
+    }
+
+    // 剪贴板下载：纯内存接收，不写文件
+    if (info.filePath.isEmpty()) {
+        QByteArray& bufferedData = m_buffers[socket];
+        if (!bufferedData.isEmpty()) {
+            info.memoryBuffer.append(bufferedData);
+            info.bytesTransferred += bufferedData.size();
+            bufferedData.clear();
+        }
+        while (socket->bytesAvailable() > 0) {
+            QByteArray chunk = socket->read(kDownloadIoBufferSize);
+            if (chunk.isEmpty()) break;
+            info.memoryBuffer.append(chunk);
+            info.bytesTransferred += chunk.size();
+        }
+        if (shouldReportProgress(info)) {
+            emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+        }
+        if (info.bytesTransferred >= info.fileSize) {
+            if (info.lastProgressBytes < info.bytesTransferred) {
+                emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+            }
+            emit clipboardReceived(info.fileId, info.memoryBuffer,
+                                   static_cast<int>(info.shareType));
+            socket->disconnectFromHost();
+        }
         return;
     }
 

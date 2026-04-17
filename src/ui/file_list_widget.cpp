@@ -4,6 +4,9 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 #include <QDir>
+#include <QClipboard>
+#include <QGuiApplication>
+#include <QImage>
 #include <QIcon>
 #include <QDebug>
 
@@ -39,7 +42,11 @@ void FileListItemWidget::setupUI() {
     m_infoLabel->setFont(infoFont);
     m_infoLabel->setStyleSheet(QStringLiteral("QLabel { color: #78716c; }"));
     QString infoText;
-    if (m_fileInfo.isDirectory) {
+    if (m_fileInfo.isClipboardImage()) {
+        infoText = tr("剪贴板图片 · 来自 %1").arg(m_fileInfo.deviceName);
+    } else if (m_fileInfo.isClipboard()) {
+        infoText = tr("剪贴板 · 来自 %1").arg(m_fileInfo.deviceName);
+    } else if (m_fileInfo.isDirectory()) {
         infoText = tr("%1 个文件 · 来自 %2").arg(m_fileInfo.fileCount).arg(m_fileInfo.deviceName);
     } else {
         infoText = tr("%1 · 来自 %2").arg(formatSize(m_fileInfo.fileSize), m_fileInfo.deviceName);
@@ -446,6 +453,22 @@ void FileListWidget::onItemDoubleClicked(QListWidgetItem* item) {
     QString fileId = widget->fileId();
     auto it = m_fileInfos.find(fileId);
     if (it == m_fileInfos.end()) {
+        return;
+    }
+
+    // 剪贴板条目：双击下载或拷贝到本地剪贴板
+    if (it.value().isClipboard()) {
+        if (!it.value().localSavePath.isEmpty()) {
+            if (it.value().isClipboardImage()) {
+                // 图片已在接收时写入剪贴板
+            } else {
+                // 文本内容存储在 localSavePath 中，重新拷贝
+                QGuiApplication::clipboard()->setText(it.value().localSavePath);
+            }
+            return;
+        }
+        // 发起下载（savePath 为空，表示内存传输）
+        emit fileDownloadRequested(it.value(), QString());
         return;
     }
 

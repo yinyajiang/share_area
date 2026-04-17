@@ -43,6 +43,7 @@ class MainWindow : public QMainWindow {
 
   private slots:
     void onFilesDropped(const QList<QUrl> &urls);
+    void onShareClipboard();
     void onPeerFound(const QString &deviceId, const QString &deviceName,
                      const QHostAddress &addr, int port);
     void onPeerLost(const QString &deviceId);

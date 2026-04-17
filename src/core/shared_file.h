@@ -4,6 +4,14 @@
 #include <QUuid>
 #include <QByteArray>
 
+// Share type: 0=file, 1=directory, 2=clipboard text, 3=clipboard image
+enum class ShareType : int {
+    File = 0,
+    Directory = 1,
+    Clipboard = 2,
+    ClipboardImage = 3,
+};
+
 struct SharedFileInfo {
     QString fileId;
     QString fileName;
@@ -13,8 +21,14 @@ struct SharedFileInfo {
     QString deviceId;
     QString deviceName;
     bool isLocal = false;
-    bool isDirectory = false;
-    int fileCount = 0;      // number of files in directory
+    ShareType shareType = ShareType::File;
+    int fileCount = 0;          // number of files in directory
+    QByteArray rawData;         // clipboard raw data: text UTF-8 or image PNG (memory only, not serialized)
+
+    // Convenience helpers
+    bool isDirectory() const { return shareType == ShareType::Directory; }
+    bool isClipboard() const { return shareType == ShareType::Clipboard || shareType == ShareType::ClipboardImage; }
+    bool isClipboardImage() const { return shareType == ShareType::ClipboardImage; }
 
     // For serialization in protocol
     QByteArray toBroadcastData() const;

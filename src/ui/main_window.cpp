@@ -15,8 +15,13 @@
 #endif
 #include <QApplication>
 #include <QCloseEvent>
+#include <QClipboard>
+#include <QBuffer>
 #include <QDir>
 #include <QDirIterator>
+#include <QGuiApplication>
+#include <QImage>
+#include <QMimeData>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHostInfo>
@@ -306,6 +311,9 @@ void MainWindow::setupConnections() {
     connect(m_dropArea, &DropAreaWidget::filesDropped, this,
             &MainWindow::onFilesDropped);
 
+    connect(m_dropArea, &DropAreaWidget::shareClipboardRequested, this,
+            &MainWindow::onShareClipboard);
+
     connect(m_discovery, &PeerDiscovery::peerFound, this,
             &MainWindow::onPeerFound);
     connect(m_discovery, &PeerDiscovery::peerLost, this,
@@ -322,6 +330,24 @@ void MainWindow::setupConnections() {
     connect(m_transferManager, &FileTransferManager::downloadError, this,
             &MainWindow::onDownloadError);
 
+    // 剪贴板内容接收后直接写入系统剪贴板
+    connect(m_transferManager, &FileTransferManager::clipboardReceived, this,
+            [this](const QString &fileId, const QByteArray &data, int shareType) {
+                if (shareType == static_cast<int>(ShareType::ClipboardImage)) {
+                    QImage image = QImage::fromData(data);
+                    if (!image.isNull()) {
+                        QGuiApplication::clipboard()->setImage(image);
+                    }
+                    m_fileList->updateFileSavePath(fileId, QStringLiteral("__clipboard_done__"));
+                } else {
+                    QString text = QString::fromUtf8(data);
+                    QGuiApplication::clipboard()->setText(text);
+                    m_fileList->updateFileSavePath(fileId, text);
+                }
+                if (m_trayIcon)
+                    m_trayIcon->showMessage(tr("剪贴板已同步"), tr("内容已拷贝到剪贴板"));
+            });
+
     connect(m_fileList, &FileListWidget::fileDownloadRequested, this,
             [this](const SharedFileInfo &file, const QString &savePath) {
                 // savePath 非空且文件已存在 → 已下载过，直接打开 Finder 定位
@@ -337,6 +363,7 @@ void MainWindow::setupConnections() {
 #endif
                     return;
                 }
+                // savePath 为空表示剪贴板内存下载，非空为普通文件下载路径
                 auto it = m_peerTransferPorts.find(file.deviceId);
                 if (it != m_peerTransferPorts.end()) {
                     if (!m_transferManager) {
@@ -567,7 +594,7 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
             SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
                 dirName, filePath, totalSize, deviceName,
                 deviceName);
-            sharedFile.isDirectory = true;
+            sharedFile.shareType = ShareType::Directory;
             sharedFile.fileCount = fileCount;
             m_localSharedFiles[sharedFile.fileId] = sharedFile;
 
@@ -614,6 +641,79 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
     }
 }
 
+void MainWindow::onShareClipboard() {
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    QString deviceName = AppSettings::instance().deviceName();
+
+    // 优先检测图片
+    const QMimeData *mimeData = clipboard->mimeData();
+    if (mimeData->hasImage()) {
+        QImage image = clipboard->image();
+        if (image.isNull()) {
+            // 图片无效，尝试文本
+        } else {
+            // 直接从内存获取 PNG 二进制数据，不写临时文件
+            QBuffer buf;
+            buf.open(QIODevice::WriteOnly);
+            image.save(&buf, "PNG");
+            buf.close();
+
+            qint64 dataSize = buf.buffer().size();
+            SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
+                tr("剪贴板图片"), QString(), dataSize, deviceName, deviceName);
+            sharedFile.shareType = ShareType::ClipboardImage;
+            sharedFile.rawData = buf.buffer();  // PNG bytes in memory
+
+            m_localSharedFiles[sharedFile.fileId] = sharedFile;
+            if (m_transferManager) {
+                FileTransferManager *manager = m_transferManager;
+                const QMap<QString, SharedFileInfo> filesSnapshot = m_localSharedFiles;
+                QMetaObject::invokeMethod(
+                    manager,
+                    [manager, filesSnapshot]() {
+                        manager->setLocalFiles(filesSnapshot);
+                    },
+                    Qt::QueuedConnection);
+            }
+            if (m_discovery)
+                m_discovery->announceFile(sharedFile);
+            qDebug() << "Shared clipboard image, size:" << dataSize << "ID:" << sharedFile.fileId;
+            return;
+        }
+    }
+
+    // 文本
+    QString text = clipboard->text();
+    if (text.isEmpty()) {
+        return;
+    }
+
+    QString preview = text.left(20).replace('\n', ' ').replace('\r', "");
+    if (text.length() > 20) {
+        preview += QStringLiteral("...");
+    }
+
+    SharedFileInfo sharedFile = SharedFileInfo::createLocalFile(
+        preview, QString(), text.toUtf8().size(), deviceName, deviceName);
+    sharedFile.shareType = ShareType::Clipboard;
+    sharedFile.rawData = text.toUtf8();  // UTF-8 bytes in memory
+
+    m_localSharedFiles[sharedFile.fileId] = sharedFile;
+    if (m_transferManager) {
+        FileTransferManager *manager = m_transferManager;
+        const QMap<QString, SharedFileInfo> filesSnapshot = m_localSharedFiles;
+        QMetaObject::invokeMethod(
+            manager,
+            [manager, filesSnapshot]() {
+                manager->setLocalFiles(filesSnapshot);
+            },
+            Qt::QueuedConnection);
+    }
+    if (m_discovery)
+        m_discovery->announceFile(sharedFile);
+    qDebug() << "Shared clipboard:" << preview << "ID:" << sharedFile.fileId;
+}
+
 void MainWindow::onPeerFound(const QString &deviceId, const QString &deviceName,
                              const QHostAddress &addr, int port) {
     bool isNew = !m_peerTransferPorts.contains(deviceId);
@@ -657,6 +757,7 @@ void MainWindow::onDownloadProgress(const QString &fileId, qint64 received,
 void MainWindow::onDownloadComplete(const QString &fileId,
                                     const QString &path) {
     qDebug() << "Download complete:" << fileId << "at" << path;
+
     m_fileList->updateFileSavePath(fileId, path);
 
     // 打开 Finder / 资源管理器定位到文件

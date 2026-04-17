@@ -154,7 +154,7 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
         }
 
     } else if (type == QStringLiteral("FILE_ADD")) {
-        // FILE_ADD|groupCode|deviceId|deviceName|fileId|fileName|fileSize|isDir|fileCount
+        // FILE_ADD|groupCode|deviceId|deviceName|fileId|fileName|fileSize|shareType|fileCount
         if (parts.size() < 7) return;
 
         QString deviceId = parts[2];
@@ -173,9 +173,9 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
         info.deviceName = deviceName;
         info.isLocal = false;
 
-        // Parse optional isDir and fileCount (backward compatible)
+        // Parse optional shareType and fileCount (backward compatible)
         if (parts.size() >= 9) {
-            info.isDirectory = (parts[7] == QStringLiteral("1"));
+            info.shareType = static_cast<ShareType>(parts[7].toInt());
             info.fileCount = parts[8].toInt();
         }
 
@@ -221,7 +221,7 @@ void PeerDiscovery::announceFile(const SharedFileInfo& file) {
         .arg(file.fileId)
         .arg(file.fileName)
         .arg(file.fileSize)
-        .arg(file.isDirectory ? 1 : 0)
+        .arg(static_cast<int>(file.shareType))
         .arg(file.fileCount)
         .toUtf8();
 
