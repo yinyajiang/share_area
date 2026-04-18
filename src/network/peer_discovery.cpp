@@ -76,6 +76,11 @@ void PeerDiscovery::sendAnnouncement() {
         .toUtf8();
 
     sendMessage(message);
+
+    // 向所有已知 peer 单播，确保广播不可达时对方仍能收到心跳
+    for (const auto& peer : m_peers) {
+        m_socket->writeDatagram(message, peer.address, Constants::DISCOVERY_PORT);
+    }
 }
 
 void PeerDiscovery::sendMessage(const QByteArray& message) {
