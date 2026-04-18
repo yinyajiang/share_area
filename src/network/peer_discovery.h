@@ -29,6 +29,7 @@ public:
     void announceFile(const SharedFileInfo& file);
     void removeFile(const QString& fileId);
     void setTransferPort(int port);
+    void setMultiAddressBroadcast(bool on);
     QList<PeerInfo> peers() const;
 
 signals:
@@ -52,9 +53,11 @@ private:
     QMap<QString, PeerInfo> m_peers;  // deviceId -> PeerInfo
     QMap<QString, SharedFileInfo> m_localFiles;  // fileId -> info
     int m_transferPort = 0;
+    bool m_multiAddressBroadcast = false;
 
     void setupSocket();
     void parseMessage(const QByteArray& data, const QHostAddress& sender);
     void sendMessage(const QByteArray& message);
     void sendAnnouncementTo(const QHostAddress& target);
+    QList<QHostAddress> broadcastAddresses() const;
 };

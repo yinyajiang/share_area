@@ -253,6 +253,12 @@ void MainWindow::initialize() {
     if (AppSettings::instance().alwaysOnTop()) {
         setWindowFlag(Qt::WindowStaysOnTopHint, true);
     }
+
+    // 多地址广播
+    if (AppSettings::instance().multiAddressBroadcast()) {
+        m_discovery->setMultiAddressBroadcast(true);
+    }
+
     show();
 }
 
@@ -474,6 +480,14 @@ void MainWindow::setupConnections() {
         AppSettings::instance().setAutoStart(on);
         AppSettings::instance().save();
     });
+    connect(m_trayIcon, &SystemTray::multiAddressBroadcastChanged, this,
+            [this](bool on) {
+                AppSettings::instance().setMultiAddressBroadcast(on);
+                AppSettings::instance().save();
+                if (m_discovery) {
+                    m_discovery->setMultiAddressBroadcast(on);
+                }
+            });
     connect(m_trayIcon, &SystemTray::quitRequested, this, [this]() {
         m_forceQuit = true;
         if (m_discovery)

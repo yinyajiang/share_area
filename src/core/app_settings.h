@@ -36,6 +36,9 @@ class AppSettings : public QObject {
     bool autoStart() const;
     void setAutoStart(bool on);
 
+    bool multiAddressBroadcast() const;
+    void setMultiAddressBroadcast(bool on);
+
     void save();
     void load();
 
@@ -53,4 +56,5 @@ class AppSettings : public QObject {
     QString m_downloadPath;
     int m_autoDeleteSeconds = 5;
     bool m_autoStart = true;
+    bool m_multiAddressBroadcast = false;
 };

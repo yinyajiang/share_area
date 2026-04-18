@@ -63,6 +63,26 @@ void PeerDiscovery::setTransferPort(int port) {
     m_transferPort = port;
 }
 
+void PeerDiscovery::setMultiAddressBroadcast(bool on) {
+    m_multiAddressBroadcast = on;
+}
+
+QList<QHostAddress> PeerDiscovery::broadcastAddresses() const {
+    QList<QHostAddress> addresses;
+    for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces()) {
+        if (iface.flags() & QNetworkInterface::IsLoopBack) continue;
+        if (!(iface.flags() & QNetworkInterface::IsUp)) continue;
+        if (!(iface.flags() & QNetworkInterface::IsRunning)) continue;
+        for (const QNetworkAddressEntry& entry : iface.addressEntries()) {
+            QHostAddress broadcast = entry.broadcast();
+            if (!broadcast.isNull()) {
+                addresses.append(broadcast);
+            }
+        }
+    }
+    return addresses;
+}
+
 void PeerDiscovery::sendAnnouncement() {
     if (m_deviceName.isEmpty()) {
         m_deviceName = AppSettings::instance().deviceName();
@@ -77,14 +97,22 @@ void PeerDiscovery::sendAnnouncement() {
 
     sendMessage(message);
 
-    // 向所有已知 peer 单播，确保广播不可达时对方仍能收到心跳
-    for (const auto& peer : m_peers) {
-        m_socket->writeDatagram(message, peer.address, Constants::DISCOVERY_PORT);
+    // 多地址广播关闭时，向已知 peer 单播确保广播不可达时对方仍能收到心跳
+    if (!m_multiAddressBroadcast) {
+        for (const auto& peer : m_peers) {
+            m_socket->writeDatagram(message, peer.address, Constants::DISCOVERY_PORT);
+        }
     }
 }
 
 void PeerDiscovery::sendMessage(const QByteArray& message) {
-    m_socket->writeDatagram(message, QHostAddress::Broadcast, Constants::DISCOVERY_PORT);
+    if (m_multiAddressBroadcast) {
+        for (const QHostAddress& addr : broadcastAddresses()) {
+            m_socket->writeDatagram(message, addr, Constants::DISCOVERY_PORT);
+        }
+    } else {
+        m_socket->writeDatagram(message, QHostAddress::Broadcast, Constants::DISCOVERY_PORT);
+    }
 }
 
 void PeerDiscovery::onReadyRead() {

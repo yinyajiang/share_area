@@ -38,6 +38,7 @@ signals:
     void changeDownloadPathRequested();
     void autoDeleteChanged(int seconds);
     void autoStartChanged(bool on);
+    void multiAddressBroadcastChanged(bool on);
     void quitRequested();
 
 private:
@@ -58,6 +59,7 @@ private:
     QMenu* m_autoDeleteMenu = nullptr;
     QActionGroup* m_autoDeleteGroup = nullptr;
     QAction* m_autoStartAction = nullptr;
+    QAction* m_multiAddressBroadcastAction = nullptr;
     QAction* m_quitAction = nullptr;
 
     void setupMenu();

@@ -74,6 +74,14 @@ void SystemTray::setupMenu() {
         emit autoStartChanged(m_autoStartAction->isChecked());
     });
 
+    // 多地址广播
+    m_multiAddressBroadcastAction = m_advancedMenu->addAction(tr("多地址广播"));
+    m_multiAddressBroadcastAction->setCheckable(true);
+    m_multiAddressBroadcastAction->setChecked(AppSettings::instance().multiAddressBroadcast());
+    connect(m_multiAddressBroadcastAction, &QAction::triggered, this, [this]() {
+        emit multiAddressBroadcastChanged(m_multiAddressBroadcastAction->isChecked());
+    });
+
     // 透明度子菜单
     m_opacityMenu = m_advancedMenu->addMenu(tr("透明度"));
 
@@ -202,6 +210,7 @@ void SystemTray::retranslateUi() {
     m_advancedMenu->setTitle(tr("高级"));
     m_alwaysOnTopAction->setText(tr("窗口置顶"));
     m_autoStartAction->setText(tr("开机启动"));
+    m_multiAddressBroadcastAction->setText(tr("多地址广播"));
     m_opacityMenu->setTitle(tr("透明度"));
     m_autoDeleteMenu->setTitle(tr("自动移除已下载项"));
     m_debugLogAction->setText(tr("调试日志"));

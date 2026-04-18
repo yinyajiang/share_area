@@ -98,8 +98,8 @@
 <context>
     <name>MainWindow</name>
     <message numerus="yes">
-        <location filename="../src/ui/main_window.cpp" line="131"/>
-        <location filename="../src/ui/main_window.cpp" line="918"/>
+        <location filename="../src/ui/main_window.cpp" line="135"/>
+        <location filename="../src/ui/main_window.cpp" line="936"/>
         <source>%n 在线</source>
         <translation>
             <numerusform>%n online</numerusform>
@@ -107,70 +107,70 @@
         </translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="141"/>
-        <location filename="../src/ui/main_window.cpp" line="910"/>
+        <location filename="../src/ui/main_window.cpp" line="145"/>
+        <location filename="../src/ui/main_window.cpp" line="928"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="182"/>
-        <location filename="../src/ui/main_window.cpp" line="909"/>
+        <location filename="../src/ui/main_window.cpp" line="186"/>
+        <location filename="../src/ui/main_window.cpp" line="927"/>
         <source>其他设备分享的文件</source>
         <translation>Files shared by other devices</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="710"/>
+        <location filename="../src/ui/main_window.cpp" line="728"/>
         <source>剪贴板图片</source>
         <translation>Clipboard Image</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="789"/>
+        <location filename="../src/ui/main_window.cpp" line="807"/>
         <source>设备上线</source>
         <translation>Device Online</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="790"/>
+        <location filename="../src/ui/main_window.cpp" line="808"/>
         <source>%1 已加入分享组</source>
         <translation>%1 has joined the sharing group</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="360"/>
+        <location filename="../src/ui/main_window.cpp" line="370"/>
         <source>剪贴板已同步</source>
         <translation>Clipboard Synced</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="361"/>
+        <location filename="../src/ui/main_window.cpp" line="371"/>
         <source>内容已拷贝到剪贴板</source>
         <translation>Content copied to clipboard</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="457"/>
+        <location filename="../src/ui/main_window.cpp" line="467"/>
         <source>选择下载路径</source>
         <translation>Select Download Path</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="840"/>
+        <location filename="../src/ui/main_window.cpp" line="858"/>
         <source>下载完成</source>
         <translation>Download Complete</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="840"/>
+        <location filename="../src/ui/main_window.cpp" line="858"/>
         <source>文件已成功下载</source>
         <translation>File downloaded successfully</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="856"/>
-        <location filename="../src/ui/main_window.cpp" line="861"/>
+        <location filename="../src/ui/main_window.cpp" line="874"/>
+        <location filename="../src/ui/main_window.cpp" line="879"/>
         <source>下载失败</source>
         <translation>Download Failed</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="857"/>
+        <location filename="../src/ui/main_window.cpp" line="875"/>
         <source>该文件在对端已失效，请等待对方重新分享后重试。</source>
         <translation>This file is no longer available on the peer. Ask the sender to share it again and retry.</translation>
     </message>
     <message>
-        <location filename="../src/ui/main_window.cpp" line="862"/>
+        <location filename="../src/ui/main_window.cpp" line="880"/>
         <source>无法下载文件：%1</source>
         <translation>Failed to download file: %1</translation>
     </message>
@@ -206,97 +206,103 @@
     <name>SystemTray</name>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="25"/>
-        <location filename="../src/ui/system_tray.cpp" line="198"/>
+        <location filename="../src/ui/system_tray.cpp" line="206"/>
         <source>显示主窗口</source>
         <translation>Show Window</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="32"/>
-        <location filename="../src/ui/system_tray.cpp" line="199"/>
+        <location filename="../src/ui/system_tray.cpp" line="207"/>
         <source>语言</source>
         <translation>Language</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="49"/>
-        <location filename="../src/ui/system_tray.cpp" line="200"/>
+        <location filename="../src/ui/system_tray.cpp" line="208"/>
         <source>更换识别码</source>
         <translation>Change Code</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="54"/>
-        <location filename="../src/ui/system_tray.cpp" line="201"/>
+        <location filename="../src/ui/system_tray.cpp" line="209"/>
         <source>默认下载目录</source>
         <translation>Download Directory</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="59"/>
-        <location filename="../src/ui/system_tray.cpp" line="202"/>
+        <location filename="../src/ui/system_tray.cpp" line="210"/>
         <source>高级</source>
         <translation>Advanced</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="62"/>
-        <location filename="../src/ui/system_tray.cpp" line="203"/>
+        <location filename="../src/ui/system_tray.cpp" line="211"/>
         <source>窗口置顶</source>
         <translation>Always on Top</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="70"/>
-        <location filename="../src/ui/system_tray.cpp" line="204"/>
+        <location filename="../src/ui/system_tray.cpp" line="212"/>
         <source>开机启动</source>
         <translation>Auto Start</translation>
     </message>
     <message>
         <location filename="../src/ui/system_tray.cpp" line="78"/>
-        <location filename="../src/ui/system_tray.cpp" line="205"/>
+        <location filename="../src/ui/system_tray.cpp" line="213"/>
+        <source>多地址广播</source>
+        <translation>Multi-address Broadcast</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/system_tray.cpp" line="86"/>
+        <location filename="../src/ui/system_tray.cpp" line="214"/>
         <source>透明度</source>
         <translation>Opacity</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="109"/>
-        <location filename="../src/ui/system_tray.cpp" line="206"/>
+        <location filename="../src/ui/system_tray.cpp" line="117"/>
+        <location filename="../src/ui/system_tray.cpp" line="215"/>
         <source>自动移除已下载项</source>
         <translation>Auto Remove Downloads</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="114"/>
-        <location filename="../src/ui/system_tray.cpp" line="210"/>
+        <location filename="../src/ui/system_tray.cpp" line="122"/>
+        <location filename="../src/ui/system_tray.cpp" line="219"/>
         <source>手动删除</source>
         <translation>Manual</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="115"/>
-        <location filename="../src/ui/system_tray.cpp" line="211"/>
+        <location filename="../src/ui/system_tray.cpp" line="123"/>
+        <location filename="../src/ui/system_tray.cpp" line="220"/>
         <source>5 秒</source>
         <translation>5 sec</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="116"/>
-        <location filename="../src/ui/system_tray.cpp" line="212"/>
+        <location filename="../src/ui/system_tray.cpp" line="124"/>
+        <location filename="../src/ui/system_tray.cpp" line="221"/>
         <source>30 秒</source>
         <translation>30 sec</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="117"/>
-        <location filename="../src/ui/system_tray.cpp" line="213"/>
+        <location filename="../src/ui/system_tray.cpp" line="125"/>
+        <location filename="../src/ui/system_tray.cpp" line="222"/>
         <source>1 分钟</source>
         <translation>1 min</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="118"/>
-        <location filename="../src/ui/system_tray.cpp" line="214"/>
+        <location filename="../src/ui/system_tray.cpp" line="126"/>
+        <location filename="../src/ui/system_tray.cpp" line="223"/>
         <source>5 分钟</source>
         <translation>5 min</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="135"/>
-        <location filename="../src/ui/system_tray.cpp" line="207"/>
+        <location filename="../src/ui/system_tray.cpp" line="143"/>
+        <location filename="../src/ui/system_tray.cpp" line="216"/>
         <source>调试日志</source>
         <translation>Debug Log</translation>
     </message>
     <message>
-        <location filename="../src/ui/system_tray.cpp" line="145"/>
-        <location filename="../src/ui/system_tray.cpp" line="220"/>
+        <location filename="../src/ui/system_tray.cpp" line="153"/>
+        <location filename="../src/ui/system_tray.cpp" line="229"/>
         <source>退出</source>
         <translation>Quit</translation>
     </message>
