@@ -40,6 +40,7 @@ set(SOURCES
     src/ui/system_tray.cpp
     src/ui/app_icon.cpp
     src/ui/log_window.cpp
+    src/ui/peer_addresses_dialog.cpp
 )
 
 # macOS 原生毛玻璃支持
@@ -62,6 +63,7 @@ set(HEADERS
     src/ui/system_tray.h
     src/ui/app_icon.h
     src/ui/log_window.h
+    src/ui/peer_addresses_dialog.h
 )
 
 # Translation files

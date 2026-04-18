@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QSettings>
 #include <QString>
+#include <QStringList>
 
 class AppSettings : public QObject {
     Q_OBJECT
@@ -39,6 +40,9 @@ class AppSettings : public QObject {
     bool multiAddressBroadcast() const;
     void setMultiAddressBroadcast(bool on);
 
+    QStringList peerAddresses() const;
+    void setPeerAddresses(const QStringList& addresses);
+
     void save();
     void load();
 
@@ -57,4 +61,5 @@ class AppSettings : public QObject {
     int m_autoDeleteSeconds = 5;
     bool m_autoStart = true;
     bool m_multiAddressBroadcast = false;
+    QStringList m_peerAddresses;
 };

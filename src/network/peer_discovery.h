@@ -31,6 +31,7 @@ public:
     void setTransferPort(int port);
     QList<PeerInfo> peers() const;
     void setMultiAddressBroadcast(bool on);
+    void setPeerAddresses(const QStringList& ips);
 
 signals:
     void peerFound(const QString& deviceId, const QString& deviceName, const QHostAddress& address, int transferPort);
@@ -53,10 +54,12 @@ private:
     QMap<QString, PeerInfo> m_peers;  // deviceId -> PeerInfo
     QMap<QString, SharedFileInfo> m_localFiles;  // fileId -> info
     QList<QHostAddress> m_broadcastAddresses;
+    QList<QHostAddress> m_peerAddresses;
     int m_transferPort = 0;
 
     void setupSocket();
     void parseMessage(const QByteArray& data, const QHostAddress& sender);
     void sendMessage(const QByteArray& message);
     void refreshBroadcastAddresses();
+    void sendAnnouncementTo(const QHostAddress& target);
 };

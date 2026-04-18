@@ -75,6 +75,21 @@ void PeerDiscovery::setMultiAddressBroadcast(bool on) {
     }
 }
 
+void PeerDiscovery::setPeerAddresses(const QStringList& ips) {
+    m_peerAddresses.clear();
+    for (const QString& ip : ips) {
+        QString trimmed = ip.trimmed();
+        if (trimmed.isEmpty()) continue;
+        QHostAddress addr(trimmed);
+        if (!addr.isNull()) {
+            m_peerAddresses.append(addr);
+        }
+    }
+    if (!m_peerAddresses.isEmpty()) {
+        qDebug() << "Peer unicast addresses:" << m_peerAddresses;
+    }
+}
+
 void PeerDiscovery::sendAnnouncement() {
     if (m_deviceName.isEmpty()) {
         m_deviceName = AppSettings::instance().deviceName();
@@ -93,10 +108,16 @@ void PeerDiscovery::sendAnnouncement() {
 void PeerDiscovery::sendMessage(const QByteArray& message) {
     if (m_broadcastAddresses.isEmpty()) {
         m_socket->writeDatagram(message, QHostAddress::Broadcast, Constants::DISCOVERY_PORT);
-        return;
+    } else {
+        for (const QHostAddress& addr : m_broadcastAddresses) {
+            m_socket->writeDatagram(message, addr, Constants::DISCOVERY_PORT);
+        }
     }
-    for (const QHostAddress& addr : m_broadcastAddresses) {
-        m_socket->writeDatagram(message, addr, Constants::DISCOVERY_PORT);
+    for (const QHostAddress& addr : m_peerAddresses) {
+        qint64 written = m_socket->writeDatagram(message, addr, Constants::DISCOVERY_PORT);
+        if (written < 0) {
+            qDebug() << "Unicast send to" << addr << "failed:" << m_socket->errorString();
+        }
     }
 }
 
@@ -157,6 +178,12 @@ void PeerDiscovery::parseMessage(const QByteArray& data, const QHostAddress& sen
         // 新设备或端口变更时通知上层
         if (isNewPeer || portChanged) {
             emit peerFound(deviceId, deviceName, sender, transferPort);
+        }
+
+        // 收到新设备的 ANNOUNCE 时，单播回复自己的 ANNOUNCE，
+        // 确保对方也能发现自己（解决虚拟机网络广播不通的问题）
+        if (isNewPeer) {
+            sendAnnouncementTo(sender);
         }
 
     } else if (type == QStringLiteral("GOODBYE")) {
@@ -260,6 +287,19 @@ void PeerDiscovery::removeFile(const QString& fileId) {
 
 QList<PeerInfo> PeerDiscovery::peers() const {
     return m_peers.values();
+}
+
+void PeerDiscovery::sendAnnouncementTo(const QHostAddress& target) {
+    if (m_deviceName.isEmpty()) {
+        m_deviceName = AppSettings::instance().deviceName();
+    }
+    QByteArray message = QStringLiteral("ANNOUNCE|%1|%2|%3|%4")
+        .arg(m_groupCode)
+        .arg(m_deviceId)
+        .arg(m_deviceName)
+        .arg(m_transferPort)
+        .toUtf8();
+    m_socket->writeDatagram(message, target, Constants::DISCOVERY_PORT);
 }
 
 void PeerDiscovery::refreshBroadcastAddresses() {

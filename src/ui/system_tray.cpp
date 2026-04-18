@@ -154,6 +154,10 @@ void SystemTray::setupMenu() {
         emit multiAddressBroadcastChanged(m_multiBroadcastAction->isChecked());
     });
 
+    m_peerAddressesAction = m_otherMenu->addAction(tr("指定目标地址"));
+    connect(m_peerAddressesAction, &QAction::triggered, this,
+            &SystemTray::peerAddressesRequested);
+
     // 退出
     m_contextMenu->addSeparator();
 
@@ -219,6 +223,7 @@ void SystemTray::retranslateUi() {
     m_changeCodeAction->setText(tr("更换识别码"));
     m_debugLogAction->setText(tr("调试日志"));
     m_multiBroadcastAction->setText(tr("多地址广播"));
+    m_peerAddressesAction->setText(tr("指定目标地址"));
     m_alwaysOnTopAction->setText(tr("窗口置顶"));
     m_opacityMenu->setTitle(tr("透明度"));
     m_downloadPathAction->setText(tr("默认下载目录"));
