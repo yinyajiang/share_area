@@ -39,7 +39,11 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     // 无边框窗口
-    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint);
+    Qt::WindowFlags flags = Qt::FramelessWindowHint | Qt::WindowSystemMenuHint;
+#ifdef Q_OS_WIN
+    flags |= Qt::Tool; // 不在任务栏显示图标，仅托盘
+#endif
+    setWindowFlags(flags);
     setAttribute(Qt::WA_TranslucentBackground);
 
     // 初始化 SVG 背景渲染器

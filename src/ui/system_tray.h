@@ -44,11 +44,8 @@ private:
     QSystemTrayIcon* m_trayIcon = nullptr;
     QMenu* m_contextMenu = nullptr;
     QAction* m_showAction = nullptr;
-    QMenu* m_appearanceMenu = nullptr;
-    QMenu* m_transferMenu = nullptr;
-    QMenu* m_generalMenu = nullptr;
-    QMenu* m_otherMenu = nullptr;
     QMenu* m_languageMenu = nullptr;
+    QMenu* m_advancedMenu = nullptr;
     QActionGroup* m_langGroup = nullptr;
     QAction* m_chineseAction = nullptr;
     QAction* m_englishAction = nullptr;

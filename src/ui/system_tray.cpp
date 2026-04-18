@@ -28,19 +28,54 @@ void SystemTray::setupMenu() {
 
     m_contextMenu->addSeparator();
 
-    // 外观设置子菜单
-    m_appearanceMenu = m_contextMenu->addMenu(tr("外观设置"));
+    // 语言设置子菜单
+    m_languageMenu = m_contextMenu->addMenu(tr("语言"));
+
+    m_langGroup = new QActionGroup(this);
+    m_chineseAction = m_languageMenu->addAction(QStringLiteral("中文"));
+    m_chineseAction->setCheckable(true);
+    m_langGroup->addAction(m_chineseAction);
+    connect(m_chineseAction, &QAction::triggered, this, [this]() {
+        emit changeLanguageRequested(QStringLiteral("zh_CN"));
+    });
+
+    m_englishAction = m_languageMenu->addAction(QStringLiteral("English"));
+    m_englishAction->setCheckable(true);
+    m_langGroup->addAction(m_englishAction);
+    connect(m_englishAction, &QAction::triggered, this,
+            [this]() { emit changeLanguageRequested(QStringLiteral("en")); });
+
+    // 更换识别码
+    m_changeCodeAction = m_contextMenu->addAction(tr("更换识别码"));
+    connect(m_changeCodeAction, &QAction::triggered, this,
+            &SystemTray::changeCodeRequested);
+
+    // 默认下载目录
+    m_downloadPathAction = m_contextMenu->addAction(tr("默认下载目录"));
+    connect(m_downloadPathAction, &QAction::triggered, this,
+            &SystemTray::changeDownloadPathRequested);
+
+    // 高级子菜单
+    m_advancedMenu = m_contextMenu->addMenu(tr("高级"));
 
     // 窗口置顶
-    m_alwaysOnTopAction = m_appearanceMenu->addAction(tr("窗口置顶"));
+    m_alwaysOnTopAction = m_advancedMenu->addAction(tr("窗口置顶"));
     m_alwaysOnTopAction->setCheckable(true);
     m_alwaysOnTopAction->setChecked(true);
     connect(m_alwaysOnTopAction, &QAction::triggered, this, [this]() {
         emit alwaysOnTopChanged(m_alwaysOnTopAction->isChecked());
     });
 
+    // 开机启动
+    m_autoStartAction = m_advancedMenu->addAction(tr("开机启动"));
+    m_autoStartAction->setCheckable(true);
+    m_autoStartAction->setChecked(AppSettings::instance().autoStart());
+    connect(m_autoStartAction, &QAction::triggered, this, [this]() {
+        emit autoStartChanged(m_autoStartAction->isChecked());
+    });
+
     // 透明度子菜单
-    m_opacityMenu = m_appearanceMenu->addMenu(tr("透明度"));
+    m_opacityMenu = m_advancedMenu->addMenu(tr("透明度"));
 
     auto *opacityWidget = new QWidget(m_opacityMenu);
     auto *opacityLayout = new QHBoxLayout(opacityWidget);
@@ -70,16 +105,8 @@ void SystemTray::setupMenu() {
     connect(m_opacitySlider, &QSlider::valueChanged, this,
             [this](int value) { emit opacityChanged(value); });
 
-    // 传输设置子菜单
-    m_transferMenu = m_contextMenu->addMenu(tr("传输设置"));
-
-    // 下载路径
-    m_downloadPathAction = m_transferMenu->addAction(tr("默认下载目录"));
-    connect(m_downloadPathAction, &QAction::triggered, this,
-            &SystemTray::changeDownloadPathRequested);
-
     // 自动移除已下载项子菜单
-    m_autoDeleteMenu = m_transferMenu->addMenu(tr("自动移除已下载项"));
+    m_autoDeleteMenu = m_advancedMenu->addMenu(tr("自动移除已下载项"));
     m_autoDeleteGroup = new QActionGroup(this);
 
     struct Option { QString label; int seconds; };
@@ -104,43 +131,8 @@ void SystemTray::setupMenu() {
         });
     }
 
-    // 通用设置子菜单
-    m_generalMenu = m_contextMenu->addMenu(tr("通用设置"));
-
-    // 语言设置子菜单
-    m_languageMenu = m_generalMenu->addMenu(tr("语言设置"));
-
-    m_langGroup = new QActionGroup(this);
-    m_chineseAction = m_languageMenu->addAction(QStringLiteral("中文"));
-    m_chineseAction->setCheckable(true);
-    m_langGroup->addAction(m_chineseAction);
-    connect(m_chineseAction, &QAction::triggered, this, [this]() {
-        emit changeLanguageRequested(QStringLiteral("zh_CN"));
-    });
-
-    m_englishAction = m_languageMenu->addAction(QStringLiteral("English"));
-    m_englishAction->setCheckable(true);
-    m_langGroup->addAction(m_englishAction);
-    connect(m_englishAction, &QAction::triggered, this,
-            [this]() { emit changeLanguageRequested(QStringLiteral("en")); });
-
-    // 更换识别码
-    m_changeCodeAction = m_generalMenu->addAction(tr("更换识别码"));
-    connect(m_changeCodeAction, &QAction::triggered, this,
-            &SystemTray::changeCodeRequested);
-
-    // 开机启动
-    m_autoStartAction = m_generalMenu->addAction(tr("开机启动"));
-    m_autoStartAction->setCheckable(true);
-    m_autoStartAction->setChecked(AppSettings::instance().autoStart());
-    connect(m_autoStartAction, &QAction::triggered, this, [this]() {
-        emit autoStartChanged(m_autoStartAction->isChecked());
-    });
-
-    // 其它设置子菜单
-    m_otherMenu = m_contextMenu->addMenu(tr("其它设置"));
-
-    m_debugLogAction = m_otherMenu->addAction(tr("调试日志"));
+    // 调试日志
+    m_debugLogAction = m_advancedMenu->addAction(tr("调试日志"));
     m_debugLogAction->setCheckable(true);
     m_debugLogAction->setChecked(false);
     connect(m_debugLogAction, &QAction::triggered, this, [this]() {
@@ -204,18 +196,15 @@ void SystemTray::updateAutoDeleteChecked(int seconds) {
 
 void SystemTray::retranslateUi() {
     m_showAction->setText(tr("显示主窗口"));
-    m_appearanceMenu->setTitle(tr("外观设置"));
-    m_transferMenu->setTitle(tr("传输设置"));
-    m_generalMenu->setTitle(tr("通用设置"));
-    m_otherMenu->setTitle(tr("其它设置"));
-    m_languageMenu->setTitle(tr("语言设置"));
+    m_languageMenu->setTitle(tr("语言"));
     m_changeCodeAction->setText(tr("更换识别码"));
-    m_debugLogAction->setText(tr("调试日志"));
-    m_alwaysOnTopAction->setText(tr("窗口置顶"));
-    m_opacityMenu->setTitle(tr("透明度"));
     m_downloadPathAction->setText(tr("默认下载目录"));
-    m_autoDeleteMenu->setTitle(tr("自动移除已下载项"));
+    m_advancedMenu->setTitle(tr("高级"));
+    m_alwaysOnTopAction->setText(tr("窗口置顶"));
     m_autoStartAction->setText(tr("开机启动"));
+    m_opacityMenu->setTitle(tr("透明度"));
+    m_autoDeleteMenu->setTitle(tr("自动移除已下载项"));
+    m_debugLogAction->setText(tr("调试日志"));
     // 更新自动移除已下载项选项文字
     struct { int secs; const char *key; } labels[] = {
         { 0, QT_TR_NOOP("手动删除") },
