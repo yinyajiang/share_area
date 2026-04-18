@@ -21,6 +21,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=..\resources\icons\icon.ico
 DisableProgramGroupPage=yes
+DisableDirPage=no
 
 [Languages]
 Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
@@ -37,6 +38,7 @@ Source: "..\build\Release\translations\*"; DestDir: "{app}\translations"; Flags:
 Source: "..\build\Release\generic\*"; DestDir: "{app}\generic"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
 Source: "..\build\Release\networkinformation\*"; DestDir: "{app}\networkinformation"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
 Source: "..\build\Release\tls\*"; DestDir: "{app}\tls"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "..\resources\icons\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autodesktop}\ShareArea"; Filename: "{app}\ShareArea.exe"
+Name: "{autodesktop}\ShareArea"; Filename: "{app}\ShareArea.exe"; IconFilename: "{app}\icon.ico"
