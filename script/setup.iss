@@ -12,7 +12,6 @@ DefaultDirName={autopf}\ShareArea
 DefaultGroupName=ShareArea
 UninstallDisplayName=ShareArea
 UninstallDisplayIcon={app}\ShareArea.exe
-LicenseFile=..\LICENSE
 OutputBaseFilename=ShareArea_Setup_{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -27,9 +26,6 @@ DisableProgramGroupPage=yes
 Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
-
 [Files]
 Source: "..\build\Release\ShareArea.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\build\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -43,9 +39,4 @@ Source: "..\build\Release\networkinformation\*"; DestDir: "{app}\networkinformat
 Source: "..\build\Release\tls\*"; DestDir: "{app}\tls"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
 
 [Icons]
-Name: "{group}\ShareArea"; Filename: "{app}\ShareArea.exe"
-Name: "{group}\{cm:UninstallProgram,ShareArea}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\ShareArea"; Filename: "{app}\ShareArea.exe"; Tasks: desktopicon
-
-[Run]
-Filename: "{app}\ShareArea.exe"; Description: "{cm:LaunchProgram,ShareArea}"; Flags: nowait postinstall skipifsilent
+Name: "{autodesktop}\ShareArea"; Filename: "{app}\ShareArea.exe"
