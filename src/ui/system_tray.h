@@ -33,8 +33,6 @@ signals:
     void changeLanguageRequested(const QString& lang);
     void changeCodeRequested();
     void debugLogToggled(bool enabled);
-    void multiAddressBroadcastChanged(bool on);
-    void peerAddressesRequested();
     void alwaysOnTopChanged(bool on);
     void opacityChanged(int opacity);
     void changeDownloadPathRequested();
@@ -56,8 +54,6 @@ private:
     QAction* m_englishAction = nullptr;
     QAction* m_changeCodeAction = nullptr;
     QAction* m_debugLogAction = nullptr;
-    QAction* m_multiBroadcastAction = nullptr;
-    QAction* m_peerAddressesAction = nullptr;
     QAction* m_alwaysOnTopAction = nullptr;
     QMenu* m_opacityMenu = nullptr;
     QSlider* m_opacitySlider = nullptr;

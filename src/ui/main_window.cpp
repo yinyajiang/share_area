@@ -8,7 +8,6 @@
 #include "ui/drop_area_widget.h"
 #include "ui/file_list_widget.h"
 #include "ui/log_window.h"
-#include "ui/peer_addresses_dialog.h"
 #include "ui/setup_dialog.h"
 #include "ui/system_tray.h"
 
@@ -230,7 +229,6 @@ void MainWindow::initialize() {
     // 再启动设备发现，确保广播时已携带正确端口
     m_discovery = new PeerDiscovery(groupCode, this);
     m_discovery->setTransferPort(m_transferPort);
-    m_discovery->setPeerAddresses(AppSettings::instance().peerAddresses());
     m_discovery->start();
 
     setupConnections();
@@ -437,27 +435,6 @@ void MainWindow::setupConnections() {
             &MainWindow::onChangeCode);
     connect(m_trayIcon, &SystemTray::debugLogToggled, this,
             &MainWindow::onDebugLogToggled);
-    connect(m_trayIcon, &SystemTray::multiAddressBroadcastChanged, this,
-            [this](bool on) {
-        AppSettings::instance().setMultiAddressBroadcast(on);
-        AppSettings::instance().save();
-        if (m_discovery) {
-            m_discovery->setMultiAddressBroadcast(on);
-        }
-    });
-    connect(m_trayIcon, &SystemTray::peerAddressesRequested, this,
-            [this]() {
-        PeerAddressesDialog dlg(nullptr);
-        dlg.setAddresses(AppSettings::instance().peerAddresses());
-        if (dlg.exec() == QDialog::Accepted) {
-            QStringList ips = dlg.addresses();
-            AppSettings::instance().setPeerAddresses(ips);
-            AppSettings::instance().save();
-            if (m_discovery) {
-                m_discovery->setPeerAddresses(ips);
-            }
-        }
-    });
     connect(m_trayIcon, &SystemTray::alwaysOnTopChanged, this, [this](bool on) {
         setWindowFlag(Qt::WindowStaysOnTopHint, on);
         show();

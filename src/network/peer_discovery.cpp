@@ -38,10 +38,6 @@ void PeerDiscovery::setupSocket() {
 void PeerDiscovery::start() {
     setupSocket();
 
-    if (AppSettings::instance().multiAddressBroadcast()) {
-        refreshBroadcastAddresses();
-    }
-
     m_broadcastTimer->start(Constants::BROADCAST_INTERVAL_MS);
     m_timeoutTimer->start(2000);
 
@@ -67,29 +63,6 @@ void PeerDiscovery::setTransferPort(int port) {
     m_transferPort = port;
 }
 
-void PeerDiscovery::setMultiAddressBroadcast(bool on) {
-    if (on) {
-        refreshBroadcastAddresses();
-    } else {
-        m_broadcastAddresses.clear();
-    }
-}
-
-void PeerDiscovery::setPeerAddresses(const QStringList& ips) {
-    m_peerAddresses.clear();
-    for (const QString& ip : ips) {
-        QString trimmed = ip.trimmed();
-        if (trimmed.isEmpty()) continue;
-        QHostAddress addr(trimmed);
-        if (!addr.isNull()) {
-            m_peerAddresses.append(addr);
-        }
-    }
-    if (!m_peerAddresses.isEmpty()) {
-        qDebug() << "Peer unicast addresses:" << m_peerAddresses;
-    }
-}
-
 void PeerDiscovery::sendAnnouncement() {
     if (m_deviceName.isEmpty()) {
         m_deviceName = AppSettings::instance().deviceName();
@@ -106,19 +79,7 @@ void PeerDiscovery::sendAnnouncement() {
 }
 
 void PeerDiscovery::sendMessage(const QByteArray& message) {
-    if (m_broadcastAddresses.isEmpty()) {
-        m_socket->writeDatagram(message, QHostAddress::Broadcast, Constants::DISCOVERY_PORT);
-    } else {
-        for (const QHostAddress& addr : m_broadcastAddresses) {
-            m_socket->writeDatagram(message, addr, Constants::DISCOVERY_PORT);
-        }
-    }
-    for (const QHostAddress& addr : m_peerAddresses) {
-        qint64 written = m_socket->writeDatagram(message, addr, Constants::DISCOVERY_PORT);
-        if (written < 0) {
-            qDebug() << "Unicast send to" << addr << "failed:" << m_socket->errorString();
-        }
-    }
+    m_socket->writeDatagram(message, QHostAddress::Broadcast, Constants::DISCOVERY_PORT);
 }
 
 void PeerDiscovery::onReadyRead() {
@@ -126,6 +87,8 @@ void PeerDiscovery::onReadyRead() {
         QNetworkDatagram datagram = m_socket->receiveDatagram();
         QByteArray data = datagram.data();
         QHostAddress sender = datagram.senderAddress();
+
+        qDebug() << "UDP recv from" << sender << ":" << data;
 
         parseMessage(data, sender);
     }
@@ -300,27 +263,4 @@ void PeerDiscovery::sendAnnouncementTo(const QHostAddress& target) {
         .arg(m_transferPort)
         .toUtf8();
     m_socket->writeDatagram(message, target, Constants::DISCOVERY_PORT);
-}
-
-void PeerDiscovery::refreshBroadcastAddresses() {
-    QList<QHostAddress> addresses;
-    for (const QNetworkInterface& iface : QNetworkInterface::allInterfaces()) {
-        if (!(iface.flags() & QNetworkInterface::IsUp) ||
-            (iface.flags() & QNetworkInterface::IsLoopBack)) {
-            continue;
-        }
-        for (const QNetworkAddressEntry& entry : iface.addressEntries()) {
-            QHostAddress ip = entry.ip();
-            if (ip.protocol() != QAbstractSocket::IPv4Protocol ||
-                ip == QHostAddress::LocalHost) {
-                continue;
-            }
-            QHostAddress broadcast = entry.broadcast();
-            if (!broadcast.isNull()) {
-                addresses.append(broadcast);
-            }
-        }
-    }
-    m_broadcastAddresses = addresses;
-    qDebug() << "Broadcast addresses:" << addresses;
 }

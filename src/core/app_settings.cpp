@@ -54,14 +54,6 @@ bool AppSettings::autoStart() const { return m_autoStart; }
 
 void AppSettings::setAutoStart(bool on) { m_autoStart = on; }
 
-bool AppSettings::multiAddressBroadcast() const { return m_multiAddressBroadcast; }
-
-void AppSettings::setMultiAddressBroadcast(bool on) { m_multiAddressBroadcast = on; }
-
-QStringList AppSettings::peerAddresses() const { return m_peerAddresses; }
-
-void AppSettings::setPeerAddresses(const QStringList& addresses) { m_peerAddresses = addresses; }
-
 void AppSettings::save() {
     m_settings.setValue(QStringLiteral("groupCode"), m_groupCode);
     m_settings.setValue(QStringLiteral("language"), m_language);
@@ -72,8 +64,6 @@ void AppSettings::save() {
     m_settings.setValue(QStringLiteral("downloadPath"), m_downloadPath);
     m_settings.setValue(QStringLiteral("autoDeleteSeconds"), m_autoDeleteSeconds);
     m_settings.setValue(QStringLiteral("autoStart"), m_autoStart);
-    m_settings.setValue(QStringLiteral("multiAddressBroadcast"), m_multiAddressBroadcast);
-    m_settings.setValue(QStringLiteral("peerAddresses"), m_peerAddresses);
 }
 
 void AppSettings::load() {
@@ -105,10 +95,4 @@ void AppSettings::load() {
 
     m_autoStart =
         m_settings.value(QStringLiteral("autoStart"), true).toBool();
-
-    m_multiAddressBroadcast =
-        m_settings.value(QStringLiteral("multiAddressBroadcast"), false).toBool();
-
-    m_peerAddresses =
-        m_settings.value(QStringLiteral("peerAddresses")).toStringList();
 }
