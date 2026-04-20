@@ -709,14 +709,30 @@ void MainWindow::onFilesDropped(const QList<QUrl> &urls) {
 void MainWindow::onShareClipboard() {
     QClipboard *clipboard = QGuiApplication::clipboard();
     QString deviceName = AppSettings::instance().deviceName();
-
-    // 优先检测图片
     const QMimeData *mimeData = clipboard->mimeData();
+
+    // 1. 优先检测 file:// URL（macOS 复制文件时剪贴板同时包含文本 URL 和图片预览）
+    {
+        QString text = clipboard->text();
+        QList<QUrl> fileUrls;
+        for (const QString &line :
+             text.split(QLatin1Char('\n'), Qt::SkipEmptyParts)) {
+            QString trimmed = line.trimmed();
+            QUrl url(trimmed);
+            if (url.isLocalFile()) {
+                fileUrls.append(url);
+            }
+        }
+        if (!fileUrls.isEmpty()) {
+            onFilesDropped(fileUrls);
+            return;
+        }
+    }
+
+    // 2. 检测图片
     if (mimeData->hasImage()) {
         QImage image = clipboard->image();
-        if (image.isNull()) {
-            // 图片无效，尝试文本
-        } else {
+        if (!image.isNull()) {
             // 直接从内存获取 PNG 二进制数据，不写临时文件
             QBuffer buf;
             buf.open(QIODevice::WriteOnly);
@@ -749,27 +765,10 @@ void MainWindow::onShareClipboard() {
         }
     }
 
-    // 文本
+    // 3. 纯文本
     QString text = clipboard->text();
     if (text.isEmpty()) {
         return;
-    }
-
-    // 检测 file:// 协议，当作文件分享
-    {
-        QList<QUrl> fileUrls;
-        for (const QString &line :
-             text.split(QLatin1Char('\n'), Qt::SkipEmptyParts)) {
-            QString trimmed = line.trimmed();
-            QUrl url(trimmed);
-            if (url.isLocalFile()) {
-                fileUrls.append(url);
-            }
-        }
-        if (!fileUrls.isEmpty()) {
-            onFilesDropped(fileUrls);
-            return;
-        }
     }
 
     QString preview = text.left(20).replace('\n', ' ').replace('\r', "");
