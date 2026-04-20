@@ -4,6 +4,9 @@
 #include <QObject>
 #include <QString>
 
+#include <memory>
+
+class QLockFile;
 class QLocalServer;
 
 class SingleInstanceGuard : public QObject {
@@ -27,6 +30,8 @@ class SingleInstanceGuard : public QObject {
     bool listen();
 
     QString m_serverName;
+    QString m_lockFilePath;
+    std::unique_ptr<QLockFile> m_lockFile;
     QLocalServer *m_server = nullptr;
     QString m_errorString;
     bool m_acquired = false;

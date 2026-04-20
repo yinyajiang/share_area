@@ -1,11 +1,31 @@
 #include "single_instance_guard.h"
 
+#include <QDir>
 #include <QLocalServer>
 #include <QLocalSocket>
+#include <QLockFile>
+
+namespace {
+
+QString lockFilePathForServerName(const QString &serverName) {
+    QString safeName = serverName;
+    for (qsizetype i = 0; i < safeName.size(); ++i) {
+        const QChar ch = safeName.at(i);
+        if (!ch.isLetterOrNumber() && ch != QLatin1Char('_') &&
+            ch != QLatin1Char('-') && ch != QLatin1Char('.')) {
+            safeName[i] = QLatin1Char('_');
+        }
+    }
+    return QDir::temp().absoluteFilePath(QStringLiteral("ShareArea-") +
+                                         safeName + QStringLiteral(".lock"));
+}
+
+} // namespace
 
 SingleInstanceGuard::SingleInstanceGuard(const QString &serverName,
                                          QObject *parent)
-    : QObject(parent), m_serverName(serverName) {}
+    : QObject(parent), m_serverName(serverName),
+      m_lockFilePath(lockFilePathForServerName(serverName)) {}
 
 SingleInstanceGuard::~SingleInstanceGuard() {
     if (m_server) {
@@ -14,6 +34,9 @@ SingleInstanceGuard::~SingleInstanceGuard() {
     if (m_acquired) {
         QLocalServer::removeServer(m_serverName);
     }
+    if (m_lockFile && m_lockFile->isLocked()) {
+        m_lockFile->unlock();
+    }
 }
 
 bool SingleInstanceGuard::tryAcquire() {
@@ -21,31 +44,33 @@ bool SingleInstanceGuard::tryAcquire() {
         return true;
     }
 
-    if (listen()) {
-        return true;
+    if (!m_lockFile) {
+        m_lockFile = std::make_unique<QLockFile>(m_lockFilePath);
     }
 
-    QLocalSocket probe;
-    probe.connectToServer(m_serverName, QIODevice::WriteOnly);
-    if (probe.waitForConnected(100)) {
-        probe.disconnectFromServer();
+    if (!m_lockFile->tryLock(0)) {
         m_errorString = QStringLiteral("Another instance is already running.");
         return false;
     }
 
+    // Only the process holding the lock may clean up a stale local server name.
     QLocalServer::removeServer(m_serverName);
-    if (m_server) {
-        delete m_server;
-        m_server = nullptr;
+
+    if (!listen()) {
+        if (m_lockFile->isLocked()) {
+            m_lockFile->unlock();
+        }
+        m_lockFile.reset();
+        return false;
     }
 
-    return listen();
+    return true;
 }
 
 bool SingleInstanceGuard::notifyPrimaryInstance(const QByteArray &message,
                                                 int timeoutMs) const {
     QLocalSocket socket;
-    socket.connectToServer(m_serverName, QIODevice::WriteOnly);
+    socket.connectToServer(m_serverName);
     if (!socket.waitForConnected(timeoutMs)) {
         return false;
     }
