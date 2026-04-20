@@ -4,6 +4,7 @@
 
 #include "constants.h"
 #include "core/app_settings.h"
+#include "core/single_instance_guard.h"
 #include "ui/app_icon.h"
 #include "ui/main_window.h"
 #include "ui/setup_dialog.h"
@@ -19,6 +20,12 @@ int main(int argc, char *argv[]) {
 
   // 设置应用图标（Dock/任务栏）
   app.setWindowIcon(createAppIcon());
+
+  SingleInstanceGuard singleInstance(QStringLiteral("sharearea-app"), &app);
+  if (!singleInstance.tryAcquire()) {
+    singleInstance.notifyPrimaryInstance();
+    return 0;
+  }
 
   // Load settings
   AppSettings &settings = AppSettings::instance();
@@ -53,6 +60,15 @@ int main(int argc, char *argv[]) {
 
   MainWindow window;
   window.setTranslator(translator);
+  QObject::connect(&singleInstance, &SingleInstanceGuard::showRequested,
+                   &window, [&window]() {
+                     window.setWindowState((window.windowState() &
+                                            ~Qt::WindowMinimized) |
+                                           Qt::WindowActive);
+                     window.show();
+                     window.raise();
+                     window.activateWindow();
+                   });
   window.show();
   window.initialize();
 
