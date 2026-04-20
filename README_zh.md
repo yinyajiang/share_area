@@ -2,12 +2,6 @@
 
 [English](README.md) | [简体中文](README_zh.md)
 
-快速、局域网内、无加密、简单直接的文件和剪切板分享工具，适合在你的设备之间使用。
-
-[Build ShareArea](https://github.com/yinyajiang/share_area/actions/workflows/build.yml)
-[License: MIT](LICENSE)
-[Platform](https://github.com/yinyajiang/share_area/releases)
-
 ShareArea 是一个轻量级桌面应用，用于在本地局域网中分享文件、文件夹和剪贴板内容，无需配置。**传输不加密**，仅建议在可信任的本地网络和你自己的设备之间使用。只要在同一局域网中的设备上打开应用，输入相同的识别码，即可开始分享。
 
 <p align="center">
