@@ -530,15 +530,9 @@ void FileTransferManager::sendDirFileChunk(QTcpSocket* socket) {
 
             qDebug() << "Sending file:" << relativePath << "size:" << fileSize;
 
-            // 发送文件头: FILE|relativePath|fileSize\n
-            QByteArray fileHeader = QStringLiteral("FILE|%1|%2\n")
-                .arg(relativePath)
-                .arg(fileSize)
-                .toUtf8();
-            socket->write(fileHeader);
-            socket->flush();  // 确保文件头被发送
-
-            // 打开文件准备读取
+            // Open and store the file before writing the header. flush() can
+            // emit bytesWritten reentrantly, which would otherwise send the
+            // same FILE header twice before the current file state is set.
             QFile* file = new QFile(fullPath, this);
             if (!file->open(QIODevice::ReadOnly)) {
                 qWarning("Failed to open file in directory: %s", qUtf8Printable(fullPath));
@@ -547,6 +541,13 @@ void FileTransferManager::sendDirFileChunk(QTcpSocket* socket) {
                 return;
             }
             socket->setProperty("file", QVariant::fromValue(file));
+
+            // 发送文件头: FILE|relativePath|fileSize\n
+            QByteArray fileHeader = QStringLiteral("FILE|%1|%2\n")
+                .arg(relativePath)
+                .arg(fileSize)
+                .toUtf8();
+            socket->write(fileHeader);
             // 文件已打开，下次循环开始发送数据
         }
     }
@@ -634,7 +635,7 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
     m_buffers[socket].append(data);
 
     // 如果还没有接收文件大小信息
-    if (info.fileSize == 0) {
+    if (!info.headerParsed) {
         int newlineIndex = m_buffers[socket].indexOf('\n');
         if (newlineIndex == -1) {
             return;  // 等待响应头
@@ -664,6 +665,7 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
                 reportDownloadError(QStringLiteral("Invalid directory response header"));
                 return;
             }
+            info.headerParsed = true;
             info.isDirectory = true;
             info.totalFiles = parts[1].toInt();
             info.fileSize = parts[2].toLongLong();
@@ -680,58 +682,60 @@ void FileTransferManager::handleDownloadResponse(QTcpSocket* socket) {
 
             // 开始接收第一个文件
             if (info.totalFiles > 0) {
-                // 等待下一个 FILE 响应头
-                return;
+                // Continue below: the first FILE header/data may already be in
+                // m_buffers from the same readyRead event.
             } else {
                 // 空文件夹，直接完成
                 emit downloadComplete(info.fileId, info.filePath);
                 socket->disconnectFromHost();
+                return;
             }
-            return;
-        }
-
-        if (status != QStringLiteral("OK")) {
-            reportDownloadError(QStringLiteral("Unexpected response"));
-            return;
-        }
-
-        // Regular file response: OK|fileSize
-        info.fileSize = parts[1].toLongLong();
-        if (info.fileSize <= 0) {
-            reportDownloadError(QStringLiteral("Invalid file size"));
-            return;
-        }
-
-        // 剪贴板下载：filePath 为空，纯内存接收
-        if (info.filePath.isEmpty()) {
-            // Data will be accumulated in memoryBuffer
-            qDebug() << "Clipboard download: in-memory, size:" << info.fileSize
-                     << "type:" << static_cast<int>(info.shareType);
         } else {
-        // 打开文件准备写入
-        QDir dir;
-        QString dirPath = QFileInfo(info.filePath).absolutePath();
-        if (!dir.exists(dirPath)) {
-            dir.mkpath(dirPath);
-        }
+            if (status != QStringLiteral("OK")) {
+                reportDownloadError(QStringLiteral("Unexpected response"));
+                return;
+            }
 
-        QFile* file = new QFile(info.filePath, this);
-        if (!file->open(QIODevice::WriteOnly)) {
-            reportDownloadError(QStringLiteral("Failed to create local file"));
-            file->deleteLater();
-            return;
-        }
-        if (!file->resize(info.fileSize)) {
-            qWarning() << "Failed to pre-allocate target file:" << info.filePath;
-        }
-        if (!file->seek(0)) {
-            reportDownloadError(QStringLiteral("Failed to initialize local file"));
-            file->deleteLater();
-            return;
-        }
+            info.headerParsed = true;
 
-        socket->setProperty("file", QVariant::fromValue(file));
-        }  // end else (non-clipboard file download)
+            // Regular file response: OK|fileSize
+            info.fileSize = parts[1].toLongLong();
+            if (info.fileSize < 0) {
+                reportDownloadError(QStringLiteral("Invalid file size"));
+                return;
+            }
+
+            // 剪贴板下载：filePath 为空，纯内存接收
+            if (info.filePath.isEmpty()) {
+                // Data will be accumulated in memoryBuffer
+                qDebug() << "Clipboard download: in-memory, size:" << info.fileSize
+                         << "type:" << static_cast<int>(info.shareType);
+            } else {
+                // 打开文件准备写入
+                QDir dir;
+                QString dirPath = QFileInfo(info.filePath).absolutePath();
+                if (!dir.exists(dirPath)) {
+                    dir.mkpath(dirPath);
+                }
+
+                QFile* file = new QFile(info.filePath, this);
+                if (!file->open(QIODevice::WriteOnly)) {
+                    reportDownloadError(QStringLiteral("Failed to create local file"));
+                    file->deleteLater();
+                    return;
+                }
+                if (!file->resize(info.fileSize)) {
+                    qWarning() << "Failed to pre-allocate target file:" << info.filePath;
+                }
+                if (!file->seek(0)) {
+                    reportDownloadError(QStringLiteral("Failed to initialize local file"));
+                    file->deleteLater();
+                    return;
+                }
+
+                socket->setProperty("file", QVariant::fromValue(file));
+            }  // end else (non-clipboard file download)
+        }
     }
 
     // 文件夹下载 - 处理每个文件
@@ -835,135 +839,148 @@ void FileTransferManager::handleDirDownloadResponse(QTcpSocket* socket) {
         socket->disconnectFromHost();
     };
 
-    // 检查是否需要读取文件头
-    if (info.currentFileSize == 0) {
-        int newlineIndex = m_buffers[socket].indexOf('\n');
-        if (newlineIndex == -1) {
-            qDebug() << "Directory download: waiting for FILE header, buffer size:" << m_buffers[socket].size();
-            return;  // 等待文件头
+    while (info.completedFiles < info.totalFiles) {
+        // 检查是否需要读取文件头
+        if (info.currentRelativePath.isEmpty()) {
+            int newlineIndex = m_buffers[socket].indexOf('\n');
+            if (newlineIndex == -1) {
+                qDebug() << "Directory download: waiting for FILE header, buffer size:" << m_buffers[socket].size();
+                return;  // 等待文件头
+            }
+
+            QByteArray header = m_buffers[socket].left(newlineIndex);
+            m_buffers[socket] = m_buffers[socket].mid(newlineIndex + 1);
+
+            QString headerStr = QString::fromUtf8(header).trimmed();
+            const QString prefix = QStringLiteral("FILE|");
+            const int sizeSeparator = headerStr.lastIndexOf(QLatin1Char('|'));
+            if (!headerStr.startsWith(prefix) || sizeSeparator <= prefix.size()) {
+                reportDownloadError(QStringLiteral("Expected FILE header in directory transfer"));
+                return;
+            }
+
+            bool sizeOk = false;
+            info.currentRelativePath = headerStr.mid(prefix.size(), sizeSeparator - prefix.size());
+            info.currentFileSize = headerStr.mid(sizeSeparator + 1).toLongLong(&sizeOk);
+            if (!sizeOk || info.currentFileSize < 0) {
+                reportDownloadError(QStringLiteral("Invalid FILE header in directory transfer"));
+                return;
+            }
+            info.currentFileTransferred = 0;
+
+            qDebug() << "Receiving file:" << info.currentRelativePath << "size:" << info.currentFileSize;
+
+            // 创建子目录并打开文件
+            QString fullPath = QDir(info.folderRootPath).filePath(info.currentRelativePath);
+            QFileInfo fullFileInfo(fullPath);
+            QDir().mkpath(fullFileInfo.absolutePath());
+
+            QFile* file = new QFile(fullPath, this);
+            if (!file->open(QIODevice::WriteOnly)) {
+                reportDownloadError(QStringLiteral("Failed to create file: ") + fullPath);
+                file->deleteLater();
+                return;
+            }
+            if (!file->resize(info.currentFileSize)) {
+                qWarning() << "Failed to pre-allocate file:" << fullPath;
+            }
+            if (!file->seek(0)) {
+                reportDownloadError(QStringLiteral("Failed to seek file: ") + fullPath);
+                file->deleteLater();
+                return;
+            }
+
+            socket->setProperty("file", QVariant::fromValue(file));
         }
 
-        QByteArray header = m_buffers[socket].left(newlineIndex);
-        m_buffers[socket] = m_buffers[socket].mid(newlineIndex + 1);
-
-        QString headerStr = QString::fromUtf8(header).trimmed();
-        QStringList parts = headerStr.split('|');
-
-        if (parts.size() < 3 || parts[0] != QStringLiteral("FILE")) {
-            reportDownloadError(QStringLiteral("Expected FILE header in directory transfer"));
+        // 写入当前文件的数据
+        QFile* file = socket->property("file").value<QFile*>();
+        if (!file || !file->isOpen()) {
+            reportDownloadError(QStringLiteral("File handle invalid during directory download"));
             return;
         }
 
-        info.currentRelativePath = parts[1];
-        info.currentFileSize = parts[2].toLongLong();
-        info.currentFileTransferred = 0;
+        auto writeAll = [file](const char* data, qint64 size) -> bool {
+            qint64 totalWritten = 0;
+            while (totalWritten < size) {
+                const qint64 written = file->write(data + totalWritten, size - totalWritten);
+                if (written <= 0) {
+                    return false;
+                }
+                totalWritten += written;
+            }
+            return true;
+        };
 
-        qDebug() << "Receiving file:" << info.currentRelativePath << "size:" << info.currentFileSize;
+        QByteArray& bufferedData = m_buffers[socket];
+        qint64 bytesToWrite = bufferedData.size() + socket->bytesAvailable();
+        qint64 bytesRemainingInFile = info.currentFileSize - info.currentFileTransferred;
+        qint64 bytesToWriteThisFile = qMin(bytesToWrite, bytesRemainingInFile);
+        if (bytesToWriteThisFile == 0 && bytesRemainingInFile > 0) {
+            return;
+        }
 
-        // 创建子目录并打开文件
-        QString fullPath = QDir(info.folderRootPath).filePath(info.currentRelativePath);
-        QFileInfo fullFileInfo(fullPath);
-        QDir().mkpath(fullFileInfo.absolutePath());
+        qint64 written = 0;
+        while (written < bytesToWriteThisFile) {
+            qint64 chunkSize = qMin(qMin<qint64>(kDownloadIoBufferSize, bytesToWriteThisFile - written),
+                                    socket->bytesAvailable() + bufferedData.size());
 
-        QFile* file = new QFile(fullPath, this);
-        if (!file->open(QIODevice::WriteOnly)) {
-            reportDownloadError(QStringLiteral("Failed to create file: ") + fullPath);
+            if (bufferedData.isEmpty()) {
+                // 直接从 socket 读取
+                std::array<char, static_cast<size_t>(kDownloadIoBufferSize)> ioBuffer{};
+                qint64 toRead = qMin(chunkSize, socket->bytesAvailable());
+                qint64 read = socket->read(ioBuffer.data(), toRead);
+                if (read <= 0) break;
+                if (!writeAll(ioBuffer.data(), read)) {
+                    reportDownloadError(QStringLiteral("Failed to write file during directory download"));
+                    return;
+                }
+                written += read;
+            } else {
+                // 写入缓冲数据
+                qint64 toWrite = qMin(qMin<qint64>(bufferedData.size(), bytesToWriteThisFile - written), chunkSize);
+                if (!writeAll(bufferedData.constData(), toWrite)) {
+                    reportDownloadError(QStringLiteral("Failed to write file during directory download"));
+                    return;
+                }
+                bufferedData.remove(0, toWrite);
+                written += toWrite;
+            }
+        }
+
+        info.currentFileTransferred += bytesToWriteThisFile;
+        info.bytesTransferred += bytesToWriteThisFile;
+
+        if (shouldReportProgress(info)) {
+            emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+        }
+
+        // 检查当前文件是否完成
+        if (info.currentFileTransferred >= info.currentFileSize) {
+            file->close();
             file->deleteLater();
-            return;
-        }
-        if (!file->resize(info.currentFileSize)) {
-            qWarning() << "Failed to pre-allocate file:" << fullPath;
-        }
-        if (!file->seek(0)) {
-            reportDownloadError(QStringLiteral("Failed to seek file: ") + fullPath);
-            file->deleteLater();
-            return;
-        }
+            socket->setProperty("file", QVariant());
 
-        socket->setProperty("file", QVariant::fromValue(file));
-    }
+            info.completedFiles++;
+            qDebug() << "File completed:" << info.completedFiles << "/" << info.totalFiles;
 
-    // 写入当前文件的数据
-    QFile* file = socket->property("file").value<QFile*>();
-    if (!file || !file->isOpen()) {
-        reportDownloadError(QStringLiteral("File handle invalid during directory download"));
+            // 重置状态准备接收下一个文件
+            info.currentFileSize = 0;
+            info.currentFileTransferred = 0;
+            info.currentRelativePath.clear();
+
+            // 检查是否所有文件都完成
+            if (info.completedFiles >= info.totalFiles) {
+                if (info.lastProgressBytes < info.bytesTransferred) {
+                    emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
+                }
+                emit downloadComplete(info.fileId, info.folderRootPath);
+                // 不主动断开连接，等待发送方断开
+                return;
+            }
+            continue;
+        }
         return;
-    }
-
-    auto writeAll = [file](const char* data, qint64 size) -> bool {
-        qint64 totalWritten = 0;
-        while (totalWritten < size) {
-            const qint64 written = file->write(data + totalWritten, size - totalWritten);
-            if (written <= 0) {
-                return false;
-            }
-            totalWritten += written;
-        }
-        return true;
-    };
-
-    QByteArray& bufferedData = m_buffers[socket];
-    qint64 bytesToWrite = bufferedData.size() + socket->bytesAvailable();
-    qint64 bytesRemainingInFile = info.currentFileSize - info.currentFileTransferred;
-    qint64 bytesToWriteThisFile = qMin(bytesToWrite, bytesRemainingInFile);
-
-    qint64 written = 0;
-    while (written < bytesToWriteThisFile) {
-        qint64 chunkSize = qMin(qMin<qint64>(kDownloadIoBufferSize, bytesToWriteThisFile - written),
-                                socket->bytesAvailable() + bufferedData.size());
-
-        if (bufferedData.isEmpty()) {
-            // 直接从 socket 读取
-            std::array<char, static_cast<size_t>(kDownloadIoBufferSize)> ioBuffer{};
-            qint64 toRead = qMin(chunkSize, socket->bytesAvailable());
-            qint64 read = socket->read(ioBuffer.data(), toRead);
-            if (read <= 0) break;
-            if (!writeAll(ioBuffer.data(), read)) {
-                reportDownloadError(QStringLiteral("Failed to write file during directory download"));
-                return;
-            }
-            written += read;
-        } else {
-            // 写入缓冲数据
-            qint64 toWrite = qMin(qMin<qint64>(bufferedData.size(), bytesToWriteThisFile - written), chunkSize);
-            if (!writeAll(bufferedData.constData(), toWrite)) {
-                reportDownloadError(QStringLiteral("Failed to write file during directory download"));
-                return;
-            }
-            bufferedData.remove(0, toWrite);
-            written += toWrite;
-        }
-    }
-
-    info.currentFileTransferred += bytesToWriteThisFile;
-    info.bytesTransferred += bytesToWriteThisFile;
-
-    if (shouldReportProgress(info)) {
-        emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
-    }
-
-    // 检查当前文件是否完成
-    if (info.currentFileTransferred >= info.currentFileSize) {
-        file->close();
-        file->deleteLater();
-        socket->setProperty("file", QVariant());
-
-        info.completedFiles++;
-        qDebug() << "File completed:" << info.completedFiles << "/" << info.totalFiles;
-
-        // 重置状态准备接收下一个文件
-        info.currentFileSize = 0;
-        info.currentFileTransferred = 0;
-        info.currentRelativePath.clear();
-
-        // 检查是否所有文件都完成
-        if (info.completedFiles >= info.totalFiles) {
-            if (info.lastProgressBytes < info.bytesTransferred) {
-                emit downloadProgress(info.fileId, info.bytesTransferred, info.fileSize);
-            }
-            emit downloadComplete(info.fileId, info.folderRootPath);
-            // 不主动断开连接，等待发送方断开
-        }
     }
 }
 
