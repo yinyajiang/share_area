@@ -1,6 +1,4 @@
-#ifndef MyAppVersion
-  #define MyAppVersion "1.0.0"
-#endif
+#define MyAppVersion "@APP_VERSION@"
 
 [Setup]
 AppName=ShareArea

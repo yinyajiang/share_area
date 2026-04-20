@@ -3,6 +3,11 @@ project(ShareArea VERSION 1.0.0 LANGUAGES CXX)
 
 # Allow overriding the app version from command line (e.g., CI)
 set(APP_VERSION "${PROJECT_VERSION}" CACHE STRING "Application version")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/script/setup.iss.in"
+    "${CMAKE_BINARY_DIR}/setup.iss"
+    @ONLY
+)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -130,12 +135,4 @@ if(WIN32)
     set_target_properties(ShareArea PROPERTIES
         WIN32_EXECUTABLE TRUE
     )
-    # 查找 windeployqt（优先从 Qt 安装目录查找，其次从 PATH 查找）
-    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../../bin")
-    if(WINDEPLOYQT_EXECUTABLE)
-        add_custom_command(TARGET ShareArea POST_BUILD
-            COMMAND ${WINDEPLOYQT_EXECUTABLE} "$<TARGET_FILE:ShareArea>"
-            COMMENT "Deploying Qt runtime libraries..."
-        )
-    endif()
 endif()

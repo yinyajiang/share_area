@@ -13,9 +13,30 @@ on:
         required: false
         default: true
         type: boolean
+      version:
+        description: 'Version number. Leave empty to infer from tag or run number'
+        required: false
+        default: ''
+        type: string
+      release:
+        description: 'Publish Windows and macOS packages as a GitHub Release'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release inputs
+        run: |
+          if [[ "${{ inputs.release }}" == "true" && ( "${{ inputs.build_windows }}" != "true" || "${{ inputs.build_macos }}" != "true" ) ]]; then
+            echo "When release is selected, both build_windows and build_macos must also be selected."
+            exit 1
+          fi
+
   build-windows:
+    needs: validate-inputs
     if: ${{ inputs.build_windows }}
     runs-on: windows-latest
     permissions:
@@ -40,8 +61,12 @@ jobs:
       - name: Determine version
         id: version
         shell: bash
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          if [[ -n "$VERSION_INPUT" ]]; then
+            ver="$VERSION_INPUT"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             ver="${{ github.ref_name }}"
             # strip leading 'v' from tag
             ver="${ver#v}"
@@ -63,6 +88,10 @@ jobs:
       - name: Build
         run: cmake --build build --config Release --parallel
 
+      - name: Deploy Qt libraries
+        shell: pwsh
+        run: windeployqt --verbose 2 build\Release\ShareArea.exe
+
       - name: Install InnoSetup
         run: choco install innosetup -y
 
@@ -73,7 +102,7 @@ jobs:
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl" -OutFile "$islDir\ChineseSimplified.isl"
 
       - name: Build Installer
-        run: iscc script/setup.iss /DMyAppVersion="${{ steps.version.outputs.version }}"
+        run: iscc build\setup.iss
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -81,13 +110,8 @@ jobs:
           name: ShareArea-${{ steps.version.outputs.version }}-Windows
           path: output/*.exe
 
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: output/*.exe
-
   build-macos:
+    needs: validate-inputs
     if: ${{ inputs.build_macos }}
     runs-on: macos-latest
     permissions:
@@ -107,8 +131,12 @@ jobs:
 
       - name: Determine version
         id: version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          if [[ -n "$VERSION_INPUT" ]]; then
+            ver="$VERSION_INPUT"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             ver="${{ github.ref_name }}"
             ver="${ver#v}"
           else
@@ -147,8 +175,46 @@ jobs:
           name: ShareArea-${{ steps.version.outputs.version }}-macOS
           path: ShareArea-*.dmg
 
+  publish-release:
+    needs: [validate-inputs, build-windows, build-macos]
+    if: ${{ inputs.release }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Determine version
+        id: version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          if [[ -n "$VERSION_INPUT" ]]; then
+            ver="$VERSION_INPUT"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            ver="${{ github.ref_name }}"
+            ver="${ver#v}"
+          else
+            ver="1.0.0-dev.${{ github.run_number }}"
+          fi
+
+          if [[ "$ver" == v* ]]; then
+            tag="$ver"
+          else
+            tag="v$ver"
+          fi
+
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: ShareArea-*.dmg
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ShareArea ${{ steps.version.outputs.version }}
+          files: release-assets/*
