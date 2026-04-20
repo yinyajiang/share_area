@@ -150,7 +150,9 @@ jobs:
           qtPrefix="$(dirname "$qtBin")"
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
             "-DCMAKE_PREFIX_PATH=$qtPrefix" \
-            "-DAPP_VERSION=${{ steps.version.outputs.version }}"
+            "-DAPP_VERSION=${{ steps.version.outputs.version }}" \
+            "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" \
+            "-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0"
 
       - name: Build
         run: cmake --build build --config Release --parallel

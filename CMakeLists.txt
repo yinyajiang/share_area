@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
+
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS deployment version")
+endif()
+
 project(ShareArea VERSION 1.0.0 LANGUAGES CXX)
 
 # Allow overriding the app version from command line (e.g., CI)
