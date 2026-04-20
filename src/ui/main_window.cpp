@@ -736,6 +736,26 @@ void MainWindow::onShareClipboard() {
         }
     }
 
+    // 1b. fallback：从文本中检测 file:// URL（Windows 可能走这条路径）
+    {
+        QString text = clipboard->text();
+        if (!text.isEmpty()) {
+            QList<QUrl> fileUrls;
+            for (const QString &line :
+                 text.split(QLatin1Char('\n'), Qt::SkipEmptyParts)) {
+                QString trimmed = line.trimmed();
+                QUrl url(trimmed);
+                if (url.isLocalFile()) {
+                    fileUrls.append(url);
+                }
+            }
+            if (!fileUrls.isEmpty()) {
+                onFilesDropped(fileUrls);
+                return;
+            }
+        }
+    }
+
     // 2. 检测图片
     if (mimeData->hasImage()) {
         QImage image = clipboard->image();
