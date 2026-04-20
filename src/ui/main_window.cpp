@@ -711,14 +711,21 @@ void MainWindow::onShareClipboard() {
     QString deviceName = AppSettings::instance().deviceName();
     const QMimeData *mimeData = clipboard->mimeData();
 
-    // 1. 优先检测 file:// URL（macOS 复制文件时剪贴板同时包含文本 URL 和图片预览）
-    {
-        QString text = clipboard->text();
+    // 调试：打印剪贴板所有 MIME 格式和内容
+    qDebug() << "=== Clipboard debug ===";
+    qDebug() << "MIME formats:" << mimeData->formats();
+    qDebug() << "hasText:" << mimeData->hasText() << "hasImage:" << mimeData->hasImage()
+             << "hasUrls:" << mimeData->hasUrls();
+    if (mimeData->hasText())
+        qDebug() << "text:" << clipboard->text().left(200);
+    if (mimeData->hasUrls())
+        qDebug() << "urls:" << mimeData->urls();
+    qDebug() << "=== end debug ===";
+
+    // 1. 优先检测文件 URL（macOS 复制文件时剪贴板包含 text/uri-list）
+    if (mimeData->hasUrls()) {
         QList<QUrl> fileUrls;
-        for (const QString &line :
-             text.split(QLatin1Char('\n'), Qt::SkipEmptyParts)) {
-            QString trimmed = line.trimmed();
-            QUrl url(trimmed);
+        for (const QUrl &url : mimeData->urls()) {
             if (url.isLocalFile()) {
                 fileUrls.append(url);
             }
