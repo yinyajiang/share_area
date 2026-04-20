@@ -183,7 +183,7 @@ void MainWindow::setupUI() {
     m_mainLayout->addWidget(m_dropArea, 0, Qt::AlignTop);
 
     // 分隔标签
-    m_separatorLabel = new QLabel(tr("其他设备分享的文件"), this);
+    m_separatorLabel = new QLabel(tr("组员分享的文件"), this);
     QFont sepFont = m_separatorLabel->font();
     sepFont.setPointSize(11);
     sepFont.setBold(true);
@@ -924,7 +924,7 @@ void MainWindow::onChangeCode() {
 }
 
 void MainWindow::retranslateUi() {
-    m_separatorLabel->setText(tr("其他设备分享的文件"));
+    m_separatorLabel->setText(tr("组员分享的文件"));
     m_closeButton->setToolTip(tr("关闭"));
     QString groupCode = AppSettings::instance().groupCode();
     m_titleLabel->setText(QStringLiteral("ShareArea · %1").arg(groupCode));

@@ -66,15 +66,21 @@
 <context>
     <name>FileListWidget</name>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="267"/>
-        <location filename="../src/ui/file_list_widget.cpp" line="626"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="274"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="644"/>
         <source>暂无远程文件</source>
         <translation>暂无远程文件</translation>
     </message>
     <message>
-        <location filename="../src/ui/file_list_widget.cpp" line="601"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="619"/>
         <source>选择下载目录</source>
         <translation>选择下载目录</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/file_list_widget.cpp" line="283"/>
+        <location filename="../src/ui/file_list_widget.cpp" line="645"/>
+        <source>双击下载或右键另存</source>
+        <translation>双击下载或右键另存</translation>
     </message>
 </context>
 <context>
@@ -114,8 +120,8 @@
     <message>
         <location filename="../src/ui/main_window.cpp" line="186"/>
         <location filename="../src/ui/main_window.cpp" line="927"/>
-        <source>其他设备分享的文件</source>
-        <translation>其他设备分享的文件</translation>
+        <source>组员分享的文件</source>
+        <translation>组员分享的文件</translation>
     </message>
     <message>
         <location filename="../src/ui/main_window.cpp" line="728"/>

@@ -256,21 +256,39 @@ void FileListWidget::setupUI() {
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
 
-    // 空状态图标
-    m_emptyIconLabel = new QLabel(this);
+    // 空状态容器（图标 + 主标题 + 副标题，整体居中）
+    m_emptyTextWidget = new QWidget(this);
+    m_emptyTextWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    auto *emptyLayout = new QVBoxLayout(m_emptyTextWidget);
+    emptyLayout->setContentsMargins(0, 0, 0, 0);
+    emptyLayout->setSpacing(2);
+    emptyLayout->setAlignment(Qt::AlignCenter);
+
+    m_emptyIconLabel = new QLabel(m_emptyTextWidget);
     QIcon emptyIcon(QStringLiteral(":/icons/empty-list.svg"));
     m_emptyIconLabel->setPixmap(emptyIcon.pixmap(64, 64));
     m_emptyIconLabel->setAlignment(Qt::AlignCenter);
-    m_emptyIconLabel->setVisible(false);
+    emptyLayout->addWidget(m_emptyIconLabel);
+    emptyLayout->addSpacing(8);
 
-    // 空状态提示
-    m_emptyLabel = new QLabel(tr("暂无远程文件"), this);
+    m_emptyLabel = new QLabel(tr("暂无远程文件"), m_emptyTextWidget);
     m_emptyLabel->setAlignment(Qt::AlignCenter);
-    m_emptyLabel->setStyleSheet(QStringLiteral("QLabel { color: #a8a29e; padding: 4px; }"));
+    m_emptyLabel->setStyleSheet(QStringLiteral("QLabel { color: #a8a29e; }"));
     QFont emptyFont = m_emptyLabel->font();
     emptyFont.setPointSize(12);
     m_emptyLabel->setFont(emptyFont);
-    m_emptyLabel->setVisible(false);
+    emptyLayout->addWidget(m_emptyLabel);
+    emptyLayout->addSpacing(6);
+
+    m_emptySubLabel = new QLabel(tr("双击下载或右键另存"), m_emptyTextWidget);
+    m_emptySubLabel->setAlignment(Qt::AlignCenter);
+    m_emptySubLabel->setStyleSheet(QStringLiteral("QLabel { color: rgba(168,162,158,0.6); }"));
+    QFont subFont = m_emptySubLabel->font();
+    subFont.setPointSize(9);
+    m_emptySubLabel->setFont(subFont);
+    emptyLayout->addWidget(m_emptySubLabel);
+
+    m_emptyTextWidget->setVisible(false);
 
     // 列表组件
     m_listWidget = new QListWidget(this);
@@ -624,12 +642,12 @@ void FileListWidget::resetDownload(const QString& fileId) {
 
 void FileListWidget::retranslateUi() {
     m_emptyLabel->setText(tr("暂无远程文件"));
+    m_emptySubLabel->setText(tr("双击下载或右键另存"));
 }
 
 void FileListWidget::updateEmptyState() {
     bool isEmpty = m_items.isEmpty();
-    m_emptyLabel->setVisible(isEmpty);
-    m_emptyIconLabel->setVisible(isEmpty);
+    m_emptyTextWidget->setVisible(isEmpty);
     m_listWidget->setVisible(!isEmpty);
 
     auto* mainLayout = qobject_cast<QVBoxLayout*>(layout());
@@ -637,15 +655,11 @@ void FileListWidget::updateEmptyState() {
 
     if (isEmpty) {
         mainLayout->removeWidget(m_listWidget);
-        if (mainLayout->indexOf(m_emptyIconLabel) == -1) {
-            mainLayout->insertWidget(0, m_emptyIconLabel, 0, Qt::AlignCenter);
-        }
-        if (mainLayout->indexOf(m_emptyLabel) == -1) {
-            mainLayout->insertWidget(1, m_emptyLabel, 0, Qt::AlignCenter);
+        if (mainLayout->indexOf(m_emptyTextWidget) == -1) {
+            mainLayout->insertWidget(0, m_emptyTextWidget, 0, Qt::AlignHCenter | Qt::AlignTop);
         }
     } else {
-        mainLayout->removeWidget(m_emptyIconLabel);
-        mainLayout->removeWidget(m_emptyLabel);
+        mainLayout->removeWidget(m_emptyTextWidget);
         if (mainLayout->indexOf(m_listWidget) == -1) {
             mainLayout->insertWidget(0, m_listWidget);
         }

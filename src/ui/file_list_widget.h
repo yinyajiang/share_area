@@ -58,7 +58,7 @@ protected:
 
 /**
  * @brief 远程文件列表组件
- * 显示其他设备分享的文件
+ * 显示组员分享的文件
  */
 class FileListWidget : public QWidget {
     Q_OBJECT
@@ -89,6 +89,8 @@ private slots:
 private:
     QListWidget* m_listWidget = nullptr;
     QLabel* m_emptyLabel = nullptr;
+    QLabel* m_emptySubLabel = nullptr;
+    QWidget* m_emptyTextWidget = nullptr;
     QLabel* m_emptyIconLabel = nullptr;
     QMap<QString, QListWidgetItem*> m_items;  // fileId -> item
     QMap<QString, SharedFileInfo> m_fileInfos;
