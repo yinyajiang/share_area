@@ -2,11 +2,13 @@
 
 [English](README.md) | [简体中文](README_zh.md)
 
-ShareArea is a lightweight desktop app for sharing files, folders, and clipboard content on a local network with no setup required. **Transfers are unencrypted by design**, so it is intended only for trusted local networks and your own devices. Open the app on devices in the same LAN, enter the same group code, and start sharing.
 
 <p align="center">
   <img src="screenshot/en.png" alt="ShareArea screenshot" width="400" />
 </p>
+
+ShareArea is a lightweight desktop app for sharing files, folders, and clipboard content on a local network with no setup required. **Transfers are unencrypted by design**, so it is intended only for trusted local networks and your own devices. Open the app on devices in the same LAN, enter the same group code, and start sharing.
+
 
 ## Highlights
 
