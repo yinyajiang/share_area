@@ -30,7 +30,7 @@ class MainWindow : public QMainWindow {
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void initialize();
+    void initialize(bool startHidden = false);
     void setTranslator(QTranslator *translator);
 
   protected:

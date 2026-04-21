@@ -74,6 +74,8 @@ void AutoStart::setEnabled(bool enabled) {
                    "        <string>");
         file.write(app.toUtf8());
         file.write("</string>\n"
+                   "        <string>--args</string>\n"
+                   "        <string>--hidden</string>\n"
                    "    </array>\n"
                    "    <key>RunAtLoad</key>\n"
                    "    <true/>\n"
@@ -96,7 +98,8 @@ void AutoStart::setEnabled(bool enabled) {
     if (enabled) {
         QString appPath = QCoreApplication::applicationFilePath();
         appPath.replace(QLatin1Char('/'), QLatin1Char('\\'));
-        settings.setValue(QStringLiteral("ShareArea"), appPath);
+        settings.setValue(QStringLiteral("ShareArea"),
+                          QStringLiteral("\"%1\" --hidden").arg(appPath));
     } else {
         settings.remove(QStringLiteral("ShareArea"));
     }

@@ -204,7 +204,7 @@ void MainWindow::setupUI() {
     m_trayIcon->show();
 }
 
-void MainWindow::initialize() {
+void MainWindow::initialize(bool startHidden) {
     checkFirstRun();
     QString groupCode = AppSettings::instance().groupCode();
     m_titleLabel->setText(QStringLiteral("ShareArea · %1").arg(groupCode));
@@ -259,7 +259,9 @@ void MainWindow::initialize() {
         m_discovery->setMultiAddressBroadcast(true);
     }
 
-    show();
+    if (!startHidden) {
+        show();
+    }
 }
 
 void MainWindow::startTransferService() {

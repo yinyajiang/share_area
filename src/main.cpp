@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QLocale>
 #include <QTranslator>
 
@@ -58,6 +59,12 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  // 解析 --hidden 参数（开机自动启动时使用，只显示托盘不显示窗口）
+  QCommandLineParser parser;
+  parser.addOption({QStringLiteral("hidden"), QStringLiteral("Start hidden in system tray")});
+  parser.parse(QCoreApplication::arguments());
+  bool startHidden = parser.isSet(QStringLiteral("hidden"));
+
   MainWindow window;
   window.setTranslator(translator);
   QObject::connect(&singleInstance, &SingleInstanceGuard::showRequested,
@@ -69,8 +76,10 @@ int main(int argc, char *argv[]) {
                      window.raise();
                      window.activateWindow();
                    });
-  window.show();
-  window.initialize();
+  if (!startHidden) {
+    window.show();
+  }
+  window.initialize(startHidden);
 
   return app.exec();
 }
