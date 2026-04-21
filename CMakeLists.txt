@@ -8,11 +8,6 @@ project(ShareArea VERSION 1.0.0 LANGUAGES CXX)
 
 # Allow overriding the app version from command line (e.g., CI)
 set(APP_VERSION "${PROJECT_VERSION}" CACHE STRING "Application version")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/script/setup.iss.in"
-    "${CMAKE_BINARY_DIR}/setup.iss"
-    @ONLY
-)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -139,6 +134,11 @@ endif()
 
 # Windows
 if(WIN32)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/script/setup.iss.in"
+        "${CMAKE_BINARY_DIR}/setup.iss"
+        @ONLY
+    )
     set_target_properties(ShareArea PROPERTIES
         WIN32_EXECUTABLE TRUE
     )
