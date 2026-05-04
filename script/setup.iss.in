@@ -4,8 +4,8 @@
 AppName=ShareArea
 AppVersion={#MyAppVersion}
 AppPublisher=ShareArea
-AppPublisherURL=https://github.com/yajiang/share_area
-AppSupportURL=https://github.com/yajiang/share_area/issues
+AppPublisherURL=https://github.com/yajiang/ShareArea
+AppSupportURL=https://github.com/yajiang/ShareArea/issues
 DefaultDirName={autopf}\ShareArea
 DefaultGroupName=ShareArea
 UninstallDisplayName=ShareArea
